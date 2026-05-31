@@ -28,7 +28,7 @@ public:
   template<typename T>
   void update(const vector<T>& v) { h.update(v.data(), v.size() * sizeof(T)); }
 
-  void update(const string& s) {h.update(s.c_str(), s.size()); }
+  void update(const string& s) {h.update(s.c_str(), u32(s.size())); }
   
   auto finish() && { return std::move(h).finish(); }
 };

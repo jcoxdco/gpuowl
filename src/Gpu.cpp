@@ -327,7 +327,7 @@ string clDefines(const Args& args, cl_device_id id, FFTConfig fft, const vector<
   if (doLog) { log("config: %s\n", defines.c_str()); }
 
   defines += toDefine(initializer_list<pair<string, u32>>{
-                    {"EXP", E},
+                    {"EXP", u32(E)},
                     {"WIDTH", fft.shape.width},
                     {"SMALL_HEIGHT", fft.shape.height},
                     {"MIDDLE", fft.shape.middle},

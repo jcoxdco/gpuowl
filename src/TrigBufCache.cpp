@@ -244,7 +244,7 @@ vector<double2> genSmallTrigComboFP64(Args *args, u32 width, u32 middle, u32 siz
   if (tail_trigs == 0) {          // All trig values read from memory.  Best option for GPUs with lousy DP performance.
     u32 height = size;
     for (u32 u = 0; u <= width * middle / 2; ++u) {
-      for (u32 v = 0; v < (tail_single_wide ? 1 : 2); ++v) {
+      for (u32 v = 0; v < (tail_single_wide ? 1u : 2u); ++v) {
         u32 line = (v == 0) ? u : (u ? width * middle - u : width * middle / 2);
         for (u32 me = 0; me < height / radix; ++me) {
           tab.push_back(root1(width * middle * height, line + width * middle * me));
@@ -299,9 +299,9 @@ static float trigError(float c, float s) { return abs(trigNorm(c, s) - 1.0f); }
 
 // Round trig double to float as to satisfy c^2 + s^2 == 1 as best as possible
 static float2 roundTrig(double lc, double ls) {
-  float c1 = lc;
+  float c1 = float(lc);
   float c2 = nexttoward(c1, lc);
-  float s1 = ls;
+  float s1 = float(ls);
   float s2 = nexttoward(s1, ls);
 
   float c = c1;
@@ -493,7 +493,7 @@ vector<float2> genSmallTrigComboFP32(Args *args, u32 width, u32 middle, u32 size
   if (tail_trigs == 0) {          // All trig values read from memory.  Best option for GPUs with lousy FP performance?
     u32 height = size;
     for (u32 u = 0; u <= width * middle / 2; ++u) {
-      for (u32 v = 0; v < (tail_single_wide ? 1 : 2); ++v) {
+      for (u32 v = 0; v < (tail_single_wide ? 1u : 2u); ++v) {
         u32 line = (v == 0) ? u : (u ? width * middle - u : width * middle / 2);
         for (u32 me = 0; me < height / radix; ++me) {
           tab.push_back(root1FP32(width * middle * height, line + width * middle * me));
@@ -656,7 +656,7 @@ vector<uint2> genSmallTrigComboGF31(Args *args, u32 width, u32 middle, u32 size,
   }
   if (tail_trigs == 0) {          // All trig values read from memory.  Best option for GPUs with great memory performance.
     for (u32 u = 0; u <= width * middle / 2; ++u) {
-      for (u32 v = 0; v < (tail_single_wide ? 1 : 2); ++v) {
+      for (u32 v = 0; v < (tail_single_wide ? 1u : 2u); ++v) {
         u32 line = (v == 0) ? u : (u ? width * middle - u : width * middle / 2);
         for (u32 me = 0; me < height / radix; ++me) {
           tab.push_back(root1GF31(root1wmh, line + width * middle * me));
@@ -818,7 +818,7 @@ vector<ulong2> genSmallTrigComboGF61(Args *args, u32 width, u32 middle, u32 size
   }
   if (tail_trigs == 0) {          // All trig values read from memory.  Best option for GPUs with great memory performance.
     for (u32 u = 0; u <= width * middle / 2; ++u) {
-      for (u32 v = 0; v < (tail_single_wide ? 1 : 2); ++v) {
+      for (u32 v = 0; v < (tail_single_wide ? 1u : 2u); ++v) {
         u32 line = (v == 0) ? u : (u ? width * middle - u : width * middle / 2);
         for (u32 me = 0; me < height / radix; ++me) {
           tab.push_back(root1GF61(root1wmh, line + width * middle * me));
@@ -865,7 +865,7 @@ vector<double2> genSmallTrig(FFTConfig fft, u32 size, u32 radix) {
     vector<float2> tab1 = genSmallTrigFP32(size, radix);
     tab1.resize(SMALLTRIG_FP32_SIZE(size, 0, 0, 0));
     // Append tab1 to tab
-    tabsize = tab.size();
+    tabsize = u32(tab.size());
     tab.resize(tabsize + tab1.size() / 2);
     memcpy((double *) tab.data() + tabsize * 2, tab1.data(), tab1.size() * 2 * sizeof(float));
   }
@@ -874,7 +874,7 @@ vector<double2> genSmallTrig(FFTConfig fft, u32 size, u32 radix) {
     vector<uint2> tab2 = genSmallTrigGF31(size, radix);
     tab2.resize(SMALLTRIG_GF31_SIZE(size, 0, 0, 0));
     // Append tab2 to tab
-    tabsize = tab.size();
+    tabsize = u32(tab.size());
     tab.resize(tabsize + tab2.size() / 2);
     memcpy((double *) tab.data() + tabsize * 2, tab2.data(), tab2.size() * 2 * sizeof(uint));
   }
@@ -883,7 +883,7 @@ vector<double2> genSmallTrig(FFTConfig fft, u32 size, u32 radix) {
     vector<ulong2> tab3 = genSmallTrigGF61(size, radix);
     tab3.resize(SMALLTRIG_GF61_SIZE(size, 0, 0, 0));
     // Append tab3 to tab
-    tabsize = tab.size();
+    tabsize = u32(tab.size());
     tab.resize(tabsize + tab3.size());
     memcpy((double *) tab.data() + tabsize * 2, tab3.data(), tab3.size() * 2 * sizeof(ulong));
   }
@@ -904,7 +904,7 @@ vector<double2> genSmallTrigCombo(Args *args, FFTConfig fft, u32 width, u32 midd
     vector<float2> tab1 = genSmallTrigComboFP32(args, width, middle, size, radix, tail_single_wide);
     tab1.resize(SMALLTRIGCOMBO_FP32_SIZE(width, middle, size, radix));
     // Append tab1 to tab
-    tabsize = tab.size();
+    tabsize = u32(tab.size());
     tab.resize(tabsize + tab1.size() / 2);
     memcpy((double *) tab.data() + tabsize * 2, tab1.data(), tab1.size() * 2 * sizeof(float));
   }
@@ -913,7 +913,7 @@ vector<double2> genSmallTrigCombo(Args *args, FFTConfig fft, u32 width, u32 midd
     vector<uint2> tab2 = genSmallTrigComboGF31(args, width, middle, size, radix, tail_single_wide);
     tab2.resize(SMALLTRIGCOMBO_GF31_SIZE(width, middle, size, radix));
     // Append tab2 to tab
-    tabsize = tab.size();
+    tabsize = u32(tab.size());
     tab.resize(tabsize + tab2.size() / 2);
     memcpy((double *) tab.data() + tabsize * 2, tab2.data(), tab2.size() * 2 * sizeof(uint));
   }
@@ -922,7 +922,7 @@ vector<double2> genSmallTrigCombo(Args *args, FFTConfig fft, u32 width, u32 midd
     vector<ulong2> tab3 = genSmallTrigComboGF61(args, width, middle, size, radix, tail_single_wide);
     tab3.resize(SMALLTRIGCOMBO_GF61_SIZE(width, middle, size, radix));
     // Append tab3 to tab
-    tabsize = tab.size();
+    tabsize = u32(tab.size());
     tab.resize(tabsize + tab3.size());
     memcpy((double *) tab.data() + tabsize * 2, tab3.data(), tab3.size() * 2 * sizeof(ulong));
   }
@@ -943,7 +943,7 @@ vector<double2> genMiddleTrig(FFTConfig fft, u32 smallH, u32 middle, u32 width) 
     vector<float2> tab1 = genMiddleTrigFP32(smallH, middle, width);
     tab1.resize(MIDDLETRIG_FP32_SIZE(width, middle, smallH));
     // Append tab1 to tab
-    tabsize = tab.size();
+    tabsize = u32(tab.size());
     tab.resize(tabsize + tab1.size() / 2);
     memcpy((double *) tab.data() + tabsize * 2, tab1.data(), tab1.size() * 2 * sizeof(float));
   }
@@ -952,7 +952,7 @@ vector<double2> genMiddleTrig(FFTConfig fft, u32 smallH, u32 middle, u32 width) 
     vector<uint2> tab2 = genMiddleTrigGF31(smallH, middle, width);
     tab2.resize(MIDDLETRIG_GF31_SIZE(width, middle, smallH));
     // Append tab2 to tab
-    tabsize = tab.size();
+    tabsize = u32(tab.size());
     tab.resize(tabsize + tab2.size() / 2);
     memcpy((double *) tab.data() + tabsize * 2, tab2.data(), tab2.size() * 2 * sizeof(uint));
   }
@@ -961,7 +961,7 @@ vector<double2> genMiddleTrig(FFTConfig fft, u32 smallH, u32 middle, u32 width) 
     vector<ulong2> tab3 = genMiddleTrigGF61(smallH, middle, width);
     tab3.resize(MIDDLETRIG_GF61_SIZE(width, middle, smallH));
     // Append tab3 to tab
-    tabsize = tab.size();
+    tabsize = u32(tab.size());
     tab.resize(tabsize + tab3.size());
     memcpy((double *) tab.data() + tabsize * 2, tab3.data(), tab3.size() * 2 * sizeof(ulong));
   }

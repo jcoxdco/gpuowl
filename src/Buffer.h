@@ -38,7 +38,7 @@ private:
   void fill(T value, u32 sizeOrFull = 0) {
     assert(sizeOrFull <= size);
     auto fillSize = sizeOrFull ? sizeOrFull : size;
-    queue->fillBuf(get(), value, fillSize * sizeof(T), tInfo);
+    queue->fillBuf(get(), value, u32(fillSize * sizeof(T)), tInfo);
   }
 
 public:
@@ -62,7 +62,7 @@ public:
 
   void read(T* out, size_t readSize) const {
     assert(readSize && readSize <= size);
-    queue->readSync(get(), readSize * sizeof(T), out, tInfo);
+    queue->readSync(get(), u32(readSize * sizeof(T)), out, tInfo);
   }
 
   // sync read without memory alloc
@@ -80,13 +80,13 @@ public:
     auto readSize = sizeOrFull ? sizeOrFull : size;
     assert(readSize <= size);
     out.resize(readSize);
-    queue->readAsync(get(), readSize * sizeof(T), out.data(), tInfo);
+    queue->readAsync(get(), u32(readSize * sizeof(T)), out.data(), tInfo);
   }
 
   void write(const vector<T>& vect) { queue->write(get(), vect, tInfo); }
 
   void zero(size_t sizeOrFull = 0) {
-    fill(0, sizeOrFull);
+    fill(0, u32(sizeOrFull));
   }
 
   void set(T value) {
@@ -97,7 +97,7 @@ public:
   // device-side copy
   void operator<<(const Buffer<T>& rhs) {
     assert(size == rhs.size);
-    queue->copyBuf(rhs.get(), get(), size * sizeof(T), tInfo);
+    queue->copyBuf(rhs.get(), get(), u32(size * sizeof(T)), tInfo);
     // copyBuf(queue->get(), rhs.get(), get(), size * sizeof(T));
   }
 };

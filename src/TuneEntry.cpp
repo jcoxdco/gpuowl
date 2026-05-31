@@ -11,7 +11,7 @@ bool TuneEntry::update(vector<TuneEntry>& results) const {
   [[maybe_unused]] bool didErase = false;
 
   int i{};
-  for (i = results.size() - 1; i >= 0 && results[i].cost > cost; --i) {
+  for (i = int(results.size()) - 1; i >= 0 && results[i].cost > cost; --i) {
     if (results[i].fft.maxExp() <= maxExp) {
       results.erase(std::next(results.begin(), i));
       didErase = true;

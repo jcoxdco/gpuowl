@@ -13,7 +13,7 @@ static i64 lowBits(i64 u, int bits) { return (u << (64 - bits)) >> (64 - bits); 
 std::vector<u32> compactBits(const vector<Word> &dataVect, u64 E) {
   if (dataVect.empty()) { return {}; } // Indicating all zero
 
-  u32 N = dataVect.size();
+  u32 N = u32(dataVect.size());
   const Word *data = dataVect.data();
 
   std::vector<u32> out;

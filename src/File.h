@@ -136,7 +136,7 @@ public:
   It end() { return It{}; }
   
   template<typename T>
-  void write(const vector<T>& v) const { write(v.data(), v.size() * sizeof(T)); }
+  void write(const vector<T>& v) const { write(v.data(), u32(v.size() * sizeof(T))); }
 
   template<typename T>
   void write(const T& x) const { write(&x, sizeof(T)); }
