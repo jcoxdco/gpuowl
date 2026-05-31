@@ -962,7 +962,10 @@ Z61 OVERLOAD weakMulAdd(Z61 a, Z61 b, u128 c, const u32 a_m61_count, const u32 b
 
 Z61 OVERLOAD mul(Z61 a, Z61 b) { return modM61(weakMul(a, b, 2, 2)); }
 
-Z61 OVERLOAD fma(Z61 a, Z61 b, Z61 c) { return modM61(weakMulAdd(a, b, c, 2, 2)); }
+// Renamed from an `fma` overload: overloading the OpenCL builtin name `fma` for the integer
+// M61 type shadowed the builtin float/double `fma` in mixed-precision (FP32+M61) kernels,
+// breaking -tune kernel compilation (fftbase.cl chainMul4). Use a distinct name instead.
+Z61 OVERLOAD fmaZ61(Z61 a, Z61 b, Z61 c) { return modM61(weakMulAdd(a, b, c, 2, 2)); }
 
 // Multiply by 2
 Z61 OVERLOAD mul2(Z61 a) { return add(a, a); }
