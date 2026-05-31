@@ -71,19 +71,19 @@ double invWeightM1(u32 N, u64 E, u32 H, u32 line, u32 col, u32 rep) {
 double boundUnderOne(double x) { return std::min(x, nexttoward(1, 0)); }
 
 float weight32(u32 N, u64 E, u32 H, u32 line, u32 col, u32 rep) {
-  return exp2((double)(extra(N, E, kAt(H, line, col) + rep)) / N);
+  return float(exp2((double)(extra(N, E, kAt(H, line, col) + rep)) / N));
 }
 
 float invWeight32(u32 N, u64 E, u32 H, u32 line, u32 col, u32 rep) {
-  return exp2(-(double)(extra(N, E, kAt(H, line, col) + rep)) / N);
+  return float(exp2(-(double)(extra(N, E, kAt(H, line, col) + rep)) / N));
 }
 
 float weightM132(u32 N, u64 E, u32 H, u32 line, u32 col, u32 rep) {
-  return expm1(M_LN2 * (double)(extra(N, E, kAt(H, line, col) + rep)) / N);
+  return float(expm1(M_LN2 * (double)(extra(N, E, kAt(H, line, col) + rep)) / N));
 }
 
 float invWeightM132(u32 N, u64 E, u32 H, u32 line, u32 col, u32 rep) {
-  return expm1(M_LN2 * - (double)(extra(N, E, kAt(H, line, col) + rep)) / N);
+  return float(expm1(M_LN2 * - (double)(extra(N, E, kAt(H, line, col) + rep)) / N));
 }
 
 Weights genWeights(FFTConfig fft, u64 E, u32 W, u32 H, u32 nW, bool nvidiaGpu) {
@@ -471,7 +471,7 @@ RoeInfo roeStat(const vector<float>& roe) {
     sumRoe  += x;
     sum2Roe += x * x;
   }
-  u32 n = roe.size();
+  u32 n = u32(roe.size());
 
   double sdRoe = sqrt(n * sum2Roe - sumRoe * sumRoe) / n;
   double meanRoe = sumRoe / n;
@@ -487,7 +487,7 @@ public:
   explicit IterationTimer(u64 kStart) : kStart(kStart) { }
 
   float reset(u64 k) {
-    float secs = timer.reset();
+    float secs = float(timer.reset());
 
     u64 its = max(u64(1), k - kStart);
     kStart = k;
@@ -1674,7 +1674,7 @@ u32 Gpu::squareLoop(Buffer<Word>& out, Buffer<Word>& in, u64 from, u64 to, bool 
     square(out, (k==from) ? in : out, leadIn, leadOut, doTailMul3 && (k == to - 1));
     leadIn = leadOut;
   }
-  return to;
+  return u32(to);
 }
 
 bool Gpu::isEqual(Buffer<Word>& in1, Buffer<Word>& in2) {
@@ -1743,7 +1743,7 @@ static string makeLogStr(const string& status, u64 k, u64 res, float secsPerIt, 
   
   snprintf(buf, sizeof(buf), "%2s %9" PRIu64 " %016" PRIx64 " %s ETA %s; ",
            status.c_str(), k, res, /* k / float(nIters) * 100, */
-           formatSecsPerIter(secsPerIt).c_str(), getETA(k, nIters, secsPerIt).c_str());
+           formatSecsPerIter(secsPerIt).c_str(), getETA(u32(k), u32(nIters), secsPerIt).c_str());
   return buf;
 }
 
@@ -1767,7 +1767,7 @@ void Gpu::doBigLog(u64 k, u64 res, bool checkOK, float secsPerIt, u64 nIters, u3
 
   RoeInfo carryStats = readCarryStats();
   if (carryStats.N > 2) {
-    u32 m = ldexp(carryStats.max, 32);
+    u32 m = u32(ldexp(carryStats.max, 32));
     double z = carryStats.z();
     log("Carry: %x Z(%u)=%.1f\n", m, carryStats.N, z);
   }
@@ -1785,7 +1785,7 @@ int ulps(double a, double b) {
   u64 aa = as<u64>(a);
   u64 bb = as<u64>(b);
   bool sameSign = (aa >> 63) == (bb >> 63);
-  int delta = sameSign ? bb - aa : bb + aa;
+  int delta = int(sameSign ? bb - aa : bb + aa);
   return delta;
 }
 
@@ -1875,12 +1875,12 @@ static void doDiv3(u64 E, Words& words) {
   assert(topBits > 0 && topBits < 32);
   {
     u64 w = (u64(r) << topBits) + words.back();
-    words.back() = w / 3;
+    words.back() = u32(w / 3);
     r = w % 3;
   }
   for (auto it = words.rbegin() + 1, end = words.rend(); it != end; ++it) {
     u64 w = (u64(r) << 32) + *it;
-    *it = w / 3;
+    *it = u32(w / 3);
     r = w % 3;
   }
 }
@@ -2297,7 +2297,7 @@ PRPResult Gpu::isPrimePRP(const Task& task) {
       log("   %9" PRIu64 " %016" PRIx64 " %s\n", k, res, formatSecsPerIter(secsPerIt).c_str());
       RoeInfo carryStats = readCarryStats();
       if (carryStats.N) {
-        u32 m = ldexp(carryStats.max, 32);
+        u32 m = u32(ldexp(carryStats.max, 32));
         double z = carryStats.z();
         log("Carry: %x Z(%u)=%.1f\n", m, carryStats.N, z);
       }
@@ -2420,7 +2420,7 @@ LLResult Gpu::isPrimeLL(const Task& task) {
 
     float secsPerIt = iterationTimer.reset(k);
     queue.setSquareTime((int) (secsPerIt * 1'000'000));
-    log("%9" PRIu64 " %016" PRIx64 " %s ETA %s\n", k, res64, formatSecsPerIter(secsPerIt).c_str(), getETA(k, kEnd, secsPerIt).c_str());
+    log("%9" PRIu64 " %016" PRIx64 " %s ETA %s\n", k, res64, formatSecsPerIter(secsPerIt).c_str(), getETA(u32(k), u32(kEnd), secsPerIt).c_str());
 
     if (k >= kEnd) { return {isAllZero, res64}; }
 
@@ -2484,7 +2484,7 @@ array<u64, 4> Gpu::isCERT(const Task& task) {
 
     if (k >= kEnd) {
       fs::remove (fname);
-      return std::move(SHA3{}.update(data.data(), (E-1)/8+1)).finish();
+      return std::move(SHA3{}.update(data.data(), u32((E-1)/8+1))).finish();
     }
 
     if (doStop) { throw "stop requested"; }
