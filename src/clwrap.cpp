@@ -75,7 +75,7 @@ string getBdfFromDevice(cl_device_id id) {
     GET_INFO(id, CL_DEVICE_TOPOLOGY_AMD, top);
     snprintf(topology, sizeof(topology), "%02x:%02x.%x",
              (unsigned) (unsigned char) top.pcie.bus, (unsigned) top.pcie.device, (unsigned) top.pcie.function);
-  } catch (const gpu_error& err) {
+  } catch (const gpu_error&) {
   }
   return topology;
 }
@@ -111,7 +111,7 @@ string getDriverVersion(cl_device_id id) {
     char buf[256];
     GET_INFO(id, CL_DRIVER_VERSION, buf);
     return buf;
-  } catch (const gpu_error& e) {
+  } catch (const gpu_error&) {
     return "";
   }
 }
@@ -126,7 +126,7 @@ bool hasFreeMemInfo(cl_device_id id) {
     u64 dummy = 0;
     GET_INFO(id, CL_DEVICE_GLOBAL_FREE_MEMORY_AMD, dummy);
     return true;
-  } catch (const gpu_error& err) {
+  } catch (const gpu_error&) {
     return false;
   }
 }
@@ -136,7 +136,7 @@ u64 getFreeMem(cl_device_id id) {
     u64 memSize = 0; 
     GET_INFO(id, CL_DEVICE_GLOBAL_FREE_MEMORY_AMD, memSize);
     return memSize * 1024; // KB to Bytes.    
-  } catch (const gpu_error& err) {
+  } catch (const gpu_error&) {
     return u64(64) * 1024 * 1024 * 1024; // return huge size (64G) when free-info not available
   }
 }
@@ -146,7 +146,7 @@ float getGpuRamGB(cl_device_id id) {
     u64 totSize = 0; 
     GET_INFO(id, CL_DEVICE_GLOBAL_MEM_SIZE, totSize);
     return ldexp(totSize, -30); // to GB
-  } catch (const gpu_error& err) {
+  } catch (const gpu_error&) {
   }
   return 0;
 }
@@ -155,7 +155,7 @@ string getBoardName(cl_device_id id) {
   char boardName[128] = {0};
   try {
     GET_INFO(id, CL_DEVICE_BOARD_NAME_AMD, boardName);
-  } catch (const gpu_error& err) {
+  } catch (const gpu_error&) {
   }
   return boardName;
 }

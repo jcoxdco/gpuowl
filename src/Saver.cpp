@@ -230,9 +230,9 @@ State Saver<State>::load() {
         if (state.exponent == exponent) {
           return state;
         }
-      } catch (const CRCError& e) {
-      } catch (const BadHeaderError& e) {
-      } catch (const ReadError& e) {
+      } catch (const CRCError&) {
+      } catch (const BadHeaderError&) {
+      } catch (const ReadError&) {
       }
     }
 
@@ -284,6 +284,13 @@ void Saver<State>::save(const State& state) {
 template<>
 void Saver<PRPState>::saveUnverified(const PRPState& state) const {
   ::writeState(*CycleFile{pathUnverified(base, prefix)}, state);
+}
+
+// saveUnverified is meaningful only for PRP. This definition exists so the explicit
+// instantiation of Saver<LLState> below has a body for it; it must never be called.
+template<>
+void Saver<LLState>::saveUnverified(const PRPState&) const {
+  assert(false && "saveUnverified is PRP-only");
 }
 
 template<typename State>
