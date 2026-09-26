@@ -9,6 +9,7 @@
 #include "log.h"
 #include "File.h"
 #include "TuneEntry.h"
+#include "i18n.h"
 
 #include <limits>
 #include <numeric>
@@ -111,9 +112,9 @@ double timeConfig(u64 exponent, GpuCommon shared, FFTConfig fft, const vector<Ke
   try {
     return Gpu::make(exponent, shared, fft, config, false)->timePRP(quick);
   } catch (const std::exception& e) {
-    log("%s failed: %s\n", fft.spec().c_str(), e.what());
+    log(_("%s failed: %s\n"), fft.spec().c_str(), e.what());
   } catch (const string& mes) {
-    log("%s failed: %s\n", fft.spec().c_str(), mes.c_str());
+    log(_("%s failed: %s\n"), fft.spec().c_str(), mes.c_str());
   }
   return numeric_limits<double>::infinity();
 }
@@ -402,17 +403,17 @@ void Tune::tune() {
   // fft.maxExp() > 2*max_exponent) would then silently time nothing useful instead of the small-exponent FFTs the
   // user asked for.  Fail loudly instead of leaving the user staring at an empty tune.txt.
   if (min_exponent > max_exponent) {
-    log("-tune: minexp=%" PRIu64 " is greater than maxexp=%" PRIu64 "; give both minexp= and maxexp= to tune a "
-        "narrow range, e.g. -tune minexp=10000000,maxexp=20000000 for a small exponent such as PRP-CF at 18M\n",
+    log(_("-tune: minexp=%" PRIu64 " is greater than maxexp=%" PRIu64 "; give both minexp= and maxexp= to tune a "
+          "narrow range, e.g. -tune minexp=10000000,maxexp=20000000 for a small exponent such as PRP-CF at 18M\n"),
         min_exponent, max_exponent);
     throw "-tune minexp/maxexp range";
   }
 
   // Devices without FP64 (e.g. Mesa rusticl on AMD) can only run the FFT types that have no FP64 data
   if (!hasFP64(shared.context->deviceId())) {
-    log("This device does not support FP64.  Only FFT types without FP64 data will be tuned.\n");
+    log(_("This device does not support FP64.  Only FFT types without FP64 data will be tuned.\n"));
     std::erase_if(shapes, [](const FFTShape& sh) { return FFTConfig{sh, 202, CARRY_AUTO}.FFT_FP64; });
-    if (shapes.empty()) { log("No FFT without FP64 in '%s'\n", args->fftSpec.c_str()); throw "No FFT"; }
+    if (shapes.empty()) { log(_("No FFT without FP64 in '%s'\n"), args->fftSpec.c_str()); throw "No FFT"; }
     time_FFTs = false;
     time_FFT6431 = false;
     time_NTTs = true;
@@ -451,39 +452,39 @@ void Tune::tune() {
     }
     // No user specifications.  Time an FP64 FFT and a GF31*GF61 NTT to see if the GPU is more suited for FP64 work or NTT work.
     else {
-      log("Checking whether this GPU is better suited for double-precision FFTs or integer NTTs.\n");
+      log(_("Checking whether this GPU is better suited for double-precision FFTs or integer NTTs.\n"));
       defaultFFTShape = FFTShape(FFT64, 512, 16, 512);
       FFTConfig const fft{defaultFFTShape, 101, CARRY_32};
       double const fp64_time = timeConfig(141000001, shared, fft, {}, quick);
-      log("Time for FP64 FFT %12s is %6.1f\n", fft.spec().c_str(), fp64_time);
+      log(_("Time for FP64 FFT %12s is %6.1f\n"), fft.spec().c_str(), fp64_time);
       defaultNTTShape = FFTShape(FFT3161, 512, 8, 512);
       FFTConfig const ntt{defaultNTTShape, 202, CARRY_AUTO};
       double const ntt_time = timeConfig(141000001, shared, ntt, {}, quick);
-      log("Time for M31*M61 NTT %12s is %6.1f\n", ntt.spec().c_str(), ntt_time);
+      log(_("Time for M31*M61 NTT %12s is %6.1f\n"), ntt.spec().c_str(), ntt_time);
       if (fp64_time < ntt_time) {
         defaultShape = &defaultFFTShape;
         time_FFTs = true;
         if (fp64_time < 0.80 * ntt_time) {
-          log("FP64 FFTs are significantly faster than integer NTTs.  No NTT tuning will be performed.\n");
+          log(_("FP64 FFTs are significantly faster than integer NTTs.  No NTT tuning will be performed.\n"));
         } else {
-          log("FP64 FFTs are not significantly faster than integer NTTs.  NTT tuning will be performed.\n");
+          log(_("FP64 FFTs are not significantly faster than integer NTTs.  NTT tuning will be performed.\n"));
           time_NTTs = true;
         }
       } else {
         defaultShape = &defaultNTTShape;
         time_NTTs = true;
         if (fp64_time > 1.20 * ntt_time) {
-          log("FP64 FFTs are significantly slower than integer NTTs.  No FP64 tuning will be performed.\n");
+          log(_("FP64 FFTs are significantly slower than integer NTTs.  No FP64 tuning will be performed.\n"));
         } else {
-          log("FP64 FFTs are not significantly slower than integer NTTs.  FP64 tuning will be performed.\n");
+          log(_("FP64 FFTs are not significantly slower than integer NTTs.  FP64 tuning will be performed.\n"));
           time_FFTs = true;
         }
       }
     }
 
     log("\n");
-    log("Beginning timing of various options.  These settings will be appended to config.txt.\n");
-    log("Please read config.txt after -tune completes.\n");
+    log(_("Beginning timing of various options.  These settings will be appended to config.txt.\n"));
+    log(_("Please read config.txt after -tune completes.\n"));
     log("\n");
 
     u32 const variant = (defaultShape == &defaultFFTShape) ? 101 : 202;
@@ -508,12 +509,12 @@ void Tune::tune() {
           args->flags["IN_WG"] = to_string(in_wg);
           args->flags["IN_SIZEX"] = to_string(in_sizex);
           double const cost = timeConfig(exponent, shared, fft, {}, quick);
-          log("Time for %12s using IN_WG=%u, IN_SIZEX=%u is %6.1f\n", fft.spec().c_str(), in_wg, in_sizex, cost);
+          log(_("Time for %12s using IN_WG=%u, IN_SIZEX=%u is %6.1f\n"), fft.spec().c_str(), in_wg, in_sizex, cost);
           if (in_wg == current_in_wg && in_sizex == current_in_sizex) current_cost = cost;
           if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_in_wg = in_wg; best_in_sizex = in_sizex; }
         }
       }
-      log("Best IN_WG, IN_SIZEX is %u, %u.  Default is 128, 16.\n", best_in_wg, best_in_sizex);
+      log(_("Best IN_WG, IN_SIZEX is %u, %u.  Default is 128, 16.\n"), best_in_wg, best_in_sizex);
       configsUpdate(current_cost, best_cost, 0.003, "IN_WG", best_in_wg, newConfigKeyVals, suggestedConfigKeyVals);
       configsUpdate(current_cost, best_cost, 0.003, "IN_SIZEX", best_in_sizex, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["IN_WG"] = to_string(best_in_wg);
@@ -530,12 +531,12 @@ void Tune::tune() {
           args->flags["OUT_WG"] = to_string(out_wg);
           args->flags["OUT_SIZEX"] = to_string(out_sizex);
           double const cost = timeConfig(exponent, shared, fft, {}, quick);
-          log("Time for %12s using OUT_WG=%u, OUT_SIZEX=%u is %6.1f\n", fft.spec().c_str(), out_wg, out_sizex, cost);
+          log(_("Time for %12s using OUT_WG=%u, OUT_SIZEX=%u is %6.1f\n"), fft.spec().c_str(), out_wg, out_sizex, cost);
           if (out_wg == current_out_wg && out_sizex == current_out_sizex) current_cost = cost;
           if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_out_wg = out_wg; best_out_sizex = out_sizex; }
         }
       }
-      log("Best OUT_WG, OUT_SIZEX is %u, %u.  Default is 128, 16.\n", best_out_wg, best_out_sizex);
+      log(_("Best OUT_WG, OUT_SIZEX is %u, %u.  Default is 128, 16.\n"), best_out_wg, best_out_sizex);
       configsUpdate(current_cost, best_cost, 0.003, "OUT_WG", best_out_wg, newConfigKeyVals, suggestedConfigKeyVals);
       configsUpdate(current_cost, best_cost, 0.003, "OUT_SIZEX", best_out_sizex, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["OUT_WG"] = to_string(best_out_wg);
@@ -553,11 +554,11 @@ void Tune::tune() {
       for (u32 const pad : {0, 64, 128, 256, 512}) {
         args->flags["PAD"] = to_string(pad);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using PAD=%u is %6.1f\n", fft.spec().c_str(), pad, cost);
+        log(_("Time for %12s using PAD=%u is %6.1f\n"), fft.spec().c_str(), pad, cost);
         if (pad == current_pad) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_pad = pad; }
       }
-      log("Best PAD is %u bytes.  Default PAD is %u bytes.\n", best_pad, AMDGPU ? 256 : 0);
+      log(_("Best PAD is %u bytes.  Default PAD is %u bytes.\n"), best_pad, AMDGPU ? 256 : 0);
       configsUpdate(current_cost, best_cost, 0.000, "PAD", best_pad, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["PAD"] = to_string(best_pad);
     }
@@ -573,11 +574,11 @@ void Tune::tune() {
       for (u32 const middle_in_lds_transpose : {0, 1}) {
         args->flags["MIDDLE_IN_LDS_TRANSPOSE"] = to_string(middle_in_lds_transpose);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using MIDDLE_IN_LDS_TRANSPOSE=%u is %6.1f\n", fft.spec().c_str(), middle_in_lds_transpose, cost);
+        log(_("Time for %12s using MIDDLE_IN_LDS_TRANSPOSE=%u is %6.1f\n"), fft.spec().c_str(), middle_in_lds_transpose, cost);
         if (middle_in_lds_transpose == current_middle_in_lds_transpose) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_middle_in_lds_transpose = middle_in_lds_transpose; }
       }
-      log("Best MIDDLE_IN_LDS_TRANSPOSE is %u.  Default MIDDLE_IN_LDS_TRANSPOSE is 1.\n", best_middle_in_lds_transpose);
+      log(_("Best MIDDLE_IN_LDS_TRANSPOSE is %u.  Default MIDDLE_IN_LDS_TRANSPOSE is 1.\n"), best_middle_in_lds_transpose);
       configsUpdate(current_cost, best_cost, 0.000, "MIDDLE_IN_LDS_TRANSPOSE", best_middle_in_lds_transpose, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["MIDDLE_IN_LDS_TRANSPOSE"] = to_string(best_middle_in_lds_transpose);
     }
@@ -593,11 +594,11 @@ void Tune::tune() {
       for (u32 const middle_out_lds_transpose : {0, 1}) {
         args->flags["MIDDLE_OUT_LDS_TRANSPOSE"] = to_string(middle_out_lds_transpose);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using MIDDLE_OUT_LDS_TRANSPOSE=%u is %6.1f\n", fft.spec().c_str(), middle_out_lds_transpose, cost);
+        log(_("Time for %12s using MIDDLE_OUT_LDS_TRANSPOSE=%u is %6.1f\n"), fft.spec().c_str(), middle_out_lds_transpose, cost);
         if (middle_out_lds_transpose == current_middle_out_lds_transpose) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_middle_out_lds_transpose = middle_out_lds_transpose; }
       }
-      log("Best MIDDLE_OUT_LDS_TRANSPOSE is %u.  Default MIDDLE_OUT_LDS_TRANSPOSE is 1.\n", best_middle_out_lds_transpose);
+      log(_("Best MIDDLE_OUT_LDS_TRANSPOSE is %u.  Default MIDDLE_OUT_LDS_TRANSPOSE is 1.\n"), best_middle_out_lds_transpose);
       configsUpdate(current_cost, best_cost, 0.000, "MIDDLE_OUT_LDS_TRANSPOSE", best_middle_out_lds_transpose, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["MIDDLE_OUT_LDS_TRANSPOSE"] = to_string(best_middle_out_lds_transpose);
     }
@@ -617,11 +618,11 @@ void Tune::tune() {
       for (u32 const inplace : {0, 1}) {
         args->flags["INPLACE"] = to_string(inplace);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using INPLACE=%u is %6.1f\n", fft.spec().c_str(), inplace, cost);
+        log(_("Time for %12s using INPLACE=%u is %6.1f\n"), fft.spec().c_str(), inplace, cost);
         if (inplace == current_inplace) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_inplace = inplace; }
       }
-      log("Best INPLACE is %u.  Default INPLACE is 0.  Best INPLACE setting may be different for other FFT lengths.\n", best_inplace);
+      log(_("Best INPLACE is %u.  Default INPLACE is 0.  Best INPLACE setting may be different for other FFT lengths.\n"), best_inplace);
       configsUpdate(current_cost, best_cost, 0.002, "INPLACE", best_inplace, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["INPLACE"] = to_string(best_inplace);
     }
@@ -641,10 +642,10 @@ void Tune::tune() {
           if (fft_load >= 2 && (!NVIDIAGPU || NO_ASM)) continue;
           args->flags["LOADS"] = to_string(loads / 10 * 10 + fft_load);
           double const cost = timeConfig(exponent, shared, fft, {}, quick);
-          log("Time for %12s using FFT load=%u is %6.1f\n", fft.spec().c_str(), fft_load, cost);
+          log(_("Time for %12s using FFT load=%u is %6.1f\n"), fft.spec().c_str(), fft_load, cost);
           if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_fft_load = fft_load; }
         }
-        log("Best FFT load is %u.  Default is 0.\n", best_fft_load);
+        log(_("Best FFT load is %u.  Default is 0.\n"), best_fft_load);
         loads = loads / 10 * 10 + best_fft_load;
         args->flags["LOADS"] = to_string(loads);
       }
@@ -659,10 +660,10 @@ void Tune::tune() {
           if (fft_store >= 2 && (!NVIDIAGPU || NO_ASM)) continue;
           args->flags["STORES"] = to_string(stores / 10 * 10 + fft_store);
           double const cost = timeConfig(exponent, shared, fft, {}, quick);
-          log("Time for %12s using FFT store=%u is %6.1f\n", fft.spec().c_str(), fft_store, cost);
+          log(_("Time for %12s using FFT store=%u is %6.1f\n"), fft.spec().c_str(), fft_store, cost);
           if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_fft_store = fft_store; }
         }
-        log("Best FFT store is %u.  Default is 0.\n", best_fft_store);
+        log(_("Best FFT store is %u.  Default is 0.\n"), best_fft_store);
         stores = stores / 10 * 10 + best_fft_store;
         args->flags["STORES"] = to_string(stores);
       }
@@ -680,10 +681,10 @@ void Tune::tune() {
           args->flags["LOADS"] = to_string(loads / 100 * 100 + cs_load * 10 + loads % 10);
           args->flags["STORES"] = to_string(stores / 100 * 100 + cs_store * 10 + stores % 10);
           double const cost = timeConfig(exponent, shared, fft, {}, quick);
-          log("Time for %12s using carry shuttle load=%u, store=%u is %6.1f\n", fft.spec().c_str(), cs_load, cs_store, cost);
+          log(_("Time for %12s using carry shuttle load=%u, store=%u is %6.1f\n"), fft.spec().c_str(), cs_load, cs_store, cost);
           if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_cs_load = cs_load; best_cs_store = cs_store; }
         }
-        log("Best carry shuttle load/store is %u/%u.  Default is 0/0.\n", best_cs_load, best_cs_store);
+        log(_("Best carry shuttle load/store is %u/%u.  Default is 0/0.\n"), best_cs_load, best_cs_store);
         loads = loads / 100 * 100 + best_cs_load * 10 + loads % 10;
         stores = stores / 100 * 100 + best_cs_store * 10 + stores % 10;
         args->flags["LOADS" ] = to_string(loads);
@@ -700,10 +701,10 @@ void Tune::tune() {
           if (trig_load >= 2 && (!NVIDIAGPU || NO_ASM)) continue;
           args->flags["LOADS"] = to_string(loads / 1000 * 1000 + trig_load * 100 + loads % 100);
           double const cost = timeConfig(exponent, shared, fft, {}, quick);
-          log("Time for %12s using Trig frequently used load=%u is %6.1f\n", fft.spec().c_str(), trig_load, cost);
+          log(_("Time for %12s using Trig frequently used load=%u is %6.1f\n"), fft.spec().c_str(), trig_load, cost);
           if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_trig_load = trig_load; }
         }
-        log("Best Trig frequently used load is %u.  Default is 0.\n", best_trig_load);
+        log(_("Best Trig frequently used load is %u.  Default is 0.\n"), best_trig_load);
         loads = loads / 1000 * 1000 + best_trig_load * 100 + loads % 100;
         args->flags["LOADS" ] = to_string(loads);
       }
@@ -718,10 +719,10 @@ void Tune::tune() {
           if (trig_load >= 2 && (!NVIDIAGPU || NO_ASM)) continue;
           args->flags["LOADS"] = to_string(loads / 10000 * 10000 + trig_load * 1000 + loads % 1000);
           double const cost = timeConfig(exponent, shared, fft, {}, quick);
-          log("Time for %12s using Trig several uses load=%u is %6.1f\n", fft.spec().c_str(), trig_load, cost);
+          log(_("Time for %12s using Trig several uses load=%u is %6.1f\n"), fft.spec().c_str(), trig_load, cost);
           if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_trig_load = trig_load; }
         }
-        log("Best Trig several uses load is %u.  Default is 0.\n", best_trig_load);
+        log(_("Best Trig several uses load is %u.  Default is 0.\n"), best_trig_load);
         loads = loads / 10000 * 10000 + best_trig_load * 1000 + loads % 1000;
         args->flags["LOADS" ] = to_string(loads);
       }
@@ -736,10 +737,10 @@ void Tune::tune() {
           if (trig_load >= 2 && (!NVIDIAGPU || NO_ASM)) continue;
           args->flags["LOADS"] = to_string(trig_load * 10000 + loads % 10000);
           double const cost = timeConfig(exponent, shared, fft, {}, quick);
-          log("Time for %12s using Trig used once load=%u is %6.1f\n", fft.spec().c_str(), trig_load, cost);
+          log(_("Time for %12s using Trig used once load=%u is %6.1f\n"), fft.spec().c_str(), trig_load, cost);
           if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_trig_load = trig_load; }
         }
-        log("Best Trig used once load is %u.  Default is 0.\n", best_trig_load);
+        log(_("Best Trig used once load is %u.  Default is 0.\n"), best_trig_load);
         loads = best_trig_load * 10000 + loads % 10000;
         args->flags["LOADS" ] = to_string(loads);
       }
@@ -763,11 +764,11 @@ void Tune::tune() {
       for (u32 const fast_barrier : {0, 1}) {
         args->flags["FAST_BARRIER"] = to_string(fast_barrier);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using FAST_BARRIER=%u is %6.1f\n", fft.spec().c_str(), fast_barrier, cost);
+        log(_("Time for %12s using FAST_BARRIER=%u is %6.1f\n"), fft.spec().c_str(), fast_barrier, cost);
         if (fast_barrier == current_fast_barrier) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_fast_barrier = fast_barrier; }
       }
-      log("Best FAST_BARRIER is %u.  Default FAST_BARRIER is 0.\n", best_fast_barrier);
+      log(_("Best FAST_BARRIER is %u.  Default FAST_BARRIER is 0.\n"), best_fast_barrier);
       configsUpdate(current_cost, best_cost, 0.000, "FAST_BARRIER", best_fast_barrier, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["FAST_BARRIER"] = to_string(best_fast_barrier);
     }
@@ -784,14 +785,14 @@ void Tune::tune() {
       for (u32 const tail_kernels : {0, 1, 2, 3}) {
         args->flags["TAIL_KERNELS"] = to_string(tail_kernels);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using TAIL_KERNELS=%u is %6.1f\n", fft.spec().c_str(), tail_kernels, cost);
+        log(_("Time for %12s using TAIL_KERNELS=%u is %6.1f\n"), fft.spec().c_str(), tail_kernels, cost);
         if (tail_kernels == current_tail_kernels) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_tail_kernels = tail_kernels; }
       }
       if (best_tail_kernels & 1)
-        log("Best TAIL_KERNELS is %u.  Default TAIL_KERNELS is 2.\n", best_tail_kernels);
+        log(_("Best TAIL_KERNELS is %u.  Default TAIL_KERNELS is 2.\n"), best_tail_kernels);
       else
-        log("Best TAIL_KERNELS is %u (but best may be %u when running two workers on one GPU).  Default TAIL_KERNELS is 2.\n", best_tail_kernels, best_tail_kernels | 1);
+        log(_("Best TAIL_KERNELS is %u (but best may be %u when running two workers on one GPU).  Default TAIL_KERNELS is 2.\n"), best_tail_kernels, best_tail_kernels | 1);
       configsUpdate(current_cost, best_cost, 0.000, "TAIL_KERNELS", best_tail_kernels, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["TAIL_KERNELS"] = to_string(best_tail_kernels);
     }
@@ -807,11 +808,11 @@ void Tune::tune() {
       for (u32 const tail_trigs : {0, 1, 2}) {
         args->flags["TAIL_TRIGS"] = to_string(tail_trigs);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using TAIL_TRIGS=%u is %6.1f\n", fft.spec().c_str(), tail_trigs, cost);
+        log(_("Time for %12s using TAIL_TRIGS=%u is %6.1f\n"), fft.spec().c_str(), tail_trigs, cost);
         if (tail_trigs == current_tail_trigs) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_tail_trigs = tail_trigs; }
       }
-      log("Best TAIL_TRIGS is %u.  Default TAIL_TRIGS is 2.\n", best_tail_trigs);
+      log(_("Best TAIL_TRIGS is %u.  Default TAIL_TRIGS is 2.\n"), best_tail_trigs);
       configsUpdate(current_cost, best_cost, 0.003, "TAIL_TRIGS", best_tail_trigs, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["TAIL_TRIGS"] = to_string(best_tail_trigs);
     }
@@ -828,11 +829,11 @@ void Tune::tune() {
       for (u32 const tail_trigs : {0, 1}) {
         args->flags["TAIL_TRIGS31"] = to_string(tail_trigs);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using TAIL_TRIGS31=%u is %6.1f\n", fft.spec().c_str(), tail_trigs, cost);
+        log(_("Time for %12s using TAIL_TRIGS31=%u is %6.1f\n"), fft.spec().c_str(), tail_trigs, cost);
         if (tail_trigs == current_tail_trigs) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_tail_trigs = tail_trigs; }
       }
-      log("Best TAIL_TRIGS31 is %u.  Default TAIL_TRIGS31 is 0.\n", best_tail_trigs);
+      log(_("Best TAIL_TRIGS31 is %u.  Default TAIL_TRIGS31 is 0.\n"), best_tail_trigs);
       configsUpdate(current_cost, best_cost, 0.003, "TAIL_TRIGS31", best_tail_trigs, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["TAIL_TRIGS31"] = to_string(best_tail_trigs);
     }
@@ -849,11 +850,11 @@ void Tune::tune() {
       for (u32 const tail_trigs : {0, 1, 2}) {
         args->flags["TAIL_TRIGS32"] = to_string(tail_trigs);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using TAIL_TRIGS32=%u is %6.1f\n", fft.spec().c_str(), tail_trigs, cost);
+        log(_("Time for %12s using TAIL_TRIGS32=%u is %6.1f\n"), fft.spec().c_str(), tail_trigs, cost);
         if (tail_trigs == current_tail_trigs) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_tail_trigs = tail_trigs; }
       }
-      log("Best TAIL_TRIGS32 is %u.  Default TAIL_TRIGS32 is 2.\n", best_tail_trigs);
+      log(_("Best TAIL_TRIGS32 is %u.  Default TAIL_TRIGS32 is 2.\n"), best_tail_trigs);
       configsUpdate(current_cost, best_cost, 0.003, "TAIL_TRIGS32", best_tail_trigs, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["TAIL_TRIGS32"] = to_string(best_tail_trigs);
     }
@@ -870,11 +871,11 @@ void Tune::tune() {
       for (u32 const tail_trigs : {0, 1}) {
         args->flags["TAIL_TRIGS61"] = to_string(tail_trigs);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using TAIL_TRIGS61=%u is %6.1f\n", fft.spec().c_str(), tail_trigs, cost);
+        log(_("Time for %12s using TAIL_TRIGS61=%u is %6.1f\n"), fft.spec().c_str(), tail_trigs, cost);
         if (tail_trigs == current_tail_trigs) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_tail_trigs = tail_trigs; }
       }
-      log("Best TAIL_TRIGS61 is %u.  Default TAIL_TRIGS61 is 0.\n", best_tail_trigs);
+      log(_("Best TAIL_TRIGS61 is %u.  Default TAIL_TRIGS61 is 0.\n"), best_tail_trigs);
       configsUpdate(current_cost, best_cost, 0.003, "TAIL_TRIGS61", best_tail_trigs, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["TAIL_TRIGS61"] = to_string(best_tail_trigs);
     }
@@ -890,11 +891,11 @@ void Tune::tune() {
       for (u32 const tabmul_chain : {0, 1}) {
         args->flags["TABMUL_CHAIN"] = to_string(tabmul_chain);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using TABMUL_CHAIN=%u is %6.1f\n", fft.spec().c_str(), tabmul_chain, cost);
+        log(_("Time for %12s using TABMUL_CHAIN=%u is %6.1f\n"), fft.spec().c_str(), tabmul_chain, cost);
         if (tabmul_chain == current_tabmul_chain) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_tabmul_chain = tabmul_chain; }
       }
-      log("Best TABMUL_CHAIN is %u.  Default TABMUL_CHAIN is 0.\n", best_tabmul_chain);
+      log(_("Best TABMUL_CHAIN is %u.  Default TABMUL_CHAIN is 0.\n"), best_tabmul_chain);
       configsUpdate(current_cost, best_cost, 0.003, "TABMUL_CHAIN", best_tabmul_chain, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["TABMUL_CHAIN"] = to_string(best_tabmul_chain);
     }
@@ -911,11 +912,11 @@ void Tune::tune() {
       for (u32 const tabmul_chain : {0, 1}) {
         args->flags["TABMUL_CHAIN31"] = to_string(tabmul_chain);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using TABMUL_CHAIN31=%u is %6.1f\n", fft.spec().c_str(), tabmul_chain, cost);
+        log(_("Time for %12s using TABMUL_CHAIN31=%u is %6.1f\n"), fft.spec().c_str(), tabmul_chain, cost);
         if (tabmul_chain == current_tabmul_chain) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_tabmul_chain = tabmul_chain; }
       }
-      log("Best TABMUL_CHAIN31 is %u.  Default TABMUL_CHAIN31 is 0.\n", best_tabmul_chain);
+      log(_("Best TABMUL_CHAIN31 is %u.  Default TABMUL_CHAIN31 is 0.\n"), best_tabmul_chain);
       configsUpdate(current_cost, best_cost, 0.003, "TABMUL_CHAIN31", best_tabmul_chain, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["TABMUL_CHAIN31"] = to_string(best_tabmul_chain);
     }
@@ -932,11 +933,11 @@ void Tune::tune() {
       for (u32 const tabmul_chain : {0, 1}) {
         args->flags["TABMUL_CHAIN32"] = to_string(tabmul_chain);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using TABMUL_CHAIN32=%u is %6.1f\n", fft.spec().c_str(), tabmul_chain, cost);
+        log(_("Time for %12s using TABMUL_CHAIN32=%u is %6.1f\n"), fft.spec().c_str(), tabmul_chain, cost);
         if (tabmul_chain == current_tabmul_chain) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_tabmul_chain = tabmul_chain; }
       }
-      log("Best TABMUL_CHAIN32 is %u.  Default TABMUL_CHAIN32 is 0.\n", best_tabmul_chain);
+      log(_("Best TABMUL_CHAIN32 is %u.  Default TABMUL_CHAIN32 is 0.\n"), best_tabmul_chain);
       configsUpdate(current_cost, best_cost, 0.003, "TABMUL_CHAIN32", best_tabmul_chain, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["TABMUL_CHAIN32"] = to_string(best_tabmul_chain);
     }
@@ -953,11 +954,11 @@ void Tune::tune() {
       for (u32 const tabmul_chain : {0, 1}) {
         args->flags["TABMUL_CHAIN61"] = to_string(tabmul_chain);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using TABMUL_CHAIN61=%u is %6.1f\n", fft.spec().c_str(), tabmul_chain, cost);
+        log(_("Time for %12s using TABMUL_CHAIN61=%u is %6.1f\n"), fft.spec().c_str(), tabmul_chain, cost);
         if (tabmul_chain == current_tabmul_chain) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_tabmul_chain = tabmul_chain; }
       }
-      log("Best TABMUL_CHAIN61 is %u.  Default TABMUL_CHAIN61 is 0.\n", best_tabmul_chain);
+      log(_("Best TABMUL_CHAIN61 is %u.  Default TABMUL_CHAIN61 is 0.\n"), best_tabmul_chain);
       configsUpdate(current_cost, best_cost, 0.003, "TABMUL_CHAIN61", best_tabmul_chain, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["TABMUL_CHAIN61"] = to_string(best_tabmul_chain);
     }
@@ -974,11 +975,11 @@ void Tune::tune() {
       for (u32 const modm31 : {0, 1, 2}) {
         args->flags["MODM31"] = to_string(modm31);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using MODM31=%u is %6.1f\n", fft.spec().c_str(), modm31, cost);
+        log(_("Time for %12s using MODM31=%u is %6.1f\n"), fft.spec().c_str(), modm31, cost);
         if (modm31 == current_modm31) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_modm31 = modm31; }
       }
-      log("Best MODM31 is %u.  Default MODM31 is 0.\n", best_modm31);
+      log(_("Best MODM31 is %u.  Default MODM31 is 0.\n"), best_modm31);
       configsUpdate(current_cost, best_cost, 0.000, "MODM31", best_modm31, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["MODM31"] = to_string(best_modm31);
     }
@@ -994,11 +995,11 @@ void Tune::tune() {
       for (u32 const unroll_w : {0, 1}) {
         args->flags["UNROLL_W"] = to_string(unroll_w);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using UNROLL_W=%u is %6.1f\n", fft.spec().c_str(), unroll_w, cost);
+        log(_("Time for %12s using UNROLL_W=%u is %6.1f\n"), fft.spec().c_str(), unroll_w, cost);
         if (unroll_w == current_unroll_w) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_unroll_w = unroll_w; }
       }
-      log("Best UNROLL_W is %u.  Default UNROLL_W is %u.\n", best_unroll_w, AMDGPU ? 0 : 1);
+      log(_("Best UNROLL_W is %u.  Default UNROLL_W is %u.\n"), best_unroll_w, AMDGPU ? 0 : 1);
       configsUpdate(current_cost, best_cost, 0.003, "UNROLL_W", best_unroll_w, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["UNROLL_W"] = to_string(best_unroll_w);
     }
@@ -1014,11 +1015,11 @@ void Tune::tune() {
       for (u32 const unroll_h : {0, 1}) {
         args->flags["UNROLL_H"] = to_string(unroll_h);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using UNROLL_H=%u is %6.1f\n", fft.spec().c_str(), unroll_h, cost);
+        log(_("Time for %12s using UNROLL_H=%u is %6.1f\n"), fft.spec().c_str(), unroll_h, cost);
         if (unroll_h == current_unroll_h) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_unroll_h = unroll_h; }
       }
-      log("Best UNROLL_H is %u.  Default UNROLL_H is %u.\n", best_unroll_h, AMDGPU && defaultShape->height >= 1024 ? 0 : 1);
+      log(_("Best UNROLL_H is %u.  Default UNROLL_H is %u.\n"), best_unroll_h, AMDGPU && defaultShape->height >= 1024 ? 0 : 1);
       configsUpdate(current_cost, best_cost, 0.003, "UNROLL_H", best_unroll_h, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["UNROLL_H"] = to_string(best_unroll_h);
     }
@@ -1034,11 +1035,11 @@ void Tune::tune() {
       for (u32 const zerohack_w : {0, 1}) {
         args->flags["ZEROHACK_W"] = to_string(zerohack_w);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using ZEROHACK_W=%u is %6.1f\n", fft.spec().c_str(), zerohack_w, cost);
+        log(_("Time for %12s using ZEROHACK_W=%u is %6.1f\n"), fft.spec().c_str(), zerohack_w, cost);
         if (zerohack_w == current_zerohack_w) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_zerohack_w = zerohack_w; }
       }
-      log("Best ZEROHACK_W is %u.  Default ZEROHACK_W is 1.\n", best_zerohack_w);
+      log(_("Best ZEROHACK_W is %u.  Default ZEROHACK_W is 1.\n"), best_zerohack_w);
       configsUpdate(current_cost, best_cost, 0.003, "ZEROHACK_W", best_zerohack_w, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["ZEROHACK_W"] = to_string(best_zerohack_w);
     }
@@ -1054,11 +1055,11 @@ void Tune::tune() {
       for (u32 const zerohack_h : {0, 1}) {
         args->flags["ZEROHACK_H"] = to_string(zerohack_h);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using ZEROHACK_H=%u is %6.1f\n", fft.spec().c_str(), zerohack_h, cost);
+        log(_("Time for %12s using ZEROHACK_H=%u is %6.1f\n"), fft.spec().c_str(), zerohack_h, cost);
         if (zerohack_h == current_zerohack_h) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_zerohack_h = zerohack_h; }
       }
-      log("Best ZEROHACK_H is %u.  Default ZEROHACK_H is 1.\n", best_zerohack_h);
+      log(_("Best ZEROHACK_H is %u.  Default ZEROHACK_H is 1.\n"), best_zerohack_h);
       configsUpdate(current_cost, best_cost, 0.003, "ZEROHACK_H", best_zerohack_h, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["ZEROHACK_H"] = to_string(best_zerohack_h);
     }
@@ -1074,11 +1075,11 @@ void Tune::tune() {
       for (u32 const wmul : {1, 2, 4}) {
         args->flags["WMUL"] = to_string(wmul);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using WMUL=%u is %6.1f\n", fft.spec().c_str(), wmul, cost);
+        log(_("Time for %12s using WMUL=%u is %6.1f\n"), fft.spec().c_str(), wmul, cost);
         if (wmul == current_wmul) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_wmul = wmul; }
       }
-      log("Best WMUL is %u.  Default WMUL is 2.\n", best_wmul);
+      log(_("Best WMUL is %u.  Default WMUL is 2.\n"), best_wmul);
       configsUpdate(current_cost, best_cost, 0.000, "WMUL", best_wmul, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["WMUL"] = to_string(best_wmul);
     }
@@ -1094,11 +1095,11 @@ void Tune::tune() {
       for (u32 multi_q : {0, 1}) {
         args->flags["MULTI_Q"] = to_string(multi_q);
         double cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using MULTI_Q=%u is %6.1f\n", fft.spec().c_str(), multi_q, cost);
+        log(_("Time for %12s using MULTI_Q=%u is %6.1f\n"), fft.spec().c_str(), multi_q, cost);
         if (multi_q == current_multi_q) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_multi_q = multi_q; }
       }
-      log("Best MULTI_Q is %u.  Default MULTI_Q is 0.\n", best_multi_q);
+      log(_("Best MULTI_Q is %u.  Default MULTI_Q is 0.\n"), best_multi_q);
       configsUpdate(current_cost, best_cost, 0.000, "MULTI_Q", best_multi_q, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["MULTI_Q"] = to_string(best_multi_q);
     }
@@ -1116,11 +1117,11 @@ void Tune::tune() {
       for (u32 l1cuda : {0, 1, 2, 3}) {
         args->flags["L1CUDA"] = to_string(l1cuda);
         double cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using L1CUDA=%u is %6.1f\n", fft.spec().c_str(), l1cuda, cost);
+        log(_("Time for %12s using L1CUDA=%u is %6.1f\n"), fft.spec().c_str(), l1cuda, cost);
         if (l1cuda == current_l1cuda) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_l1cuda = l1cuda; }
       }
-      log("Best L1CUDA is %u.  Default L1CUDA is 0.\n", best_l1cuda);
+      log(_("Best L1CUDA is %u.  Default L1CUDA is 0.\n"), best_l1cuda);
       configsUpdate(current_cost, best_cost, 0.000, "L1CUDA", best_l1cuda, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["L1CUDA"] = to_string(best_l1cuda);
     }
@@ -1136,11 +1137,11 @@ void Tune::tune() {
       for (u32 graphs : {0, 1}) {
         args->flags["GRAPHS"] = to_string(graphs);
         double cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using GRAPHS=%u is %6.1f\n", fft.spec().c_str(), graphs, cost);
+        log(_("Time for %12s using GRAPHS=%u is %6.1f\n"), fft.spec().c_str(), graphs, cost);
         if (graphs == current_graphs) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_graphs = graphs; }
       }
-      log("Best GRAPHS is %u.  Default GRAPHS is 1.\n", best_graphs);
+      log(_("Best GRAPHS is %u.  Default GRAPHS is 1.\n"), best_graphs);
       configsUpdate(current_cost, best_cost, 0.003, "GRAPHS", best_graphs, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["GRAPHS"] = to_string(best_graphs);
     }
@@ -1156,11 +1157,11 @@ void Tune::tune() {
       for (u32 const noreg : {0, 1}) {
         args->flags["NOREG"] = to_string(noreg);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using NOREG=%u is %6.1f\n", fft.spec().c_str(), noreg, cost);
+        log(_("Time for %12s using NOREG=%u is %6.1f\n"), fft.spec().c_str(), noreg, cost);
         if (noreg == current_noreg) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_noreg = noreg; }
       }
-      log("Best NOREG is %u.  Default NOREG is 0.\n", best_noreg);
+      log(_("Best NOREG is %u.  Default NOREG is 0.\n"), best_noreg);
       configsUpdate(current_cost, best_cost, 0.000, "NOREG", best_noreg, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["NOREG"] = to_string(best_noreg);
     }
@@ -1177,11 +1178,11 @@ void Tune::tune() {
       for (u32 const biglit : {0, 1}) {
         args->flags["BIGLIT"] = to_string(biglit);
         double const cost = timeConfig(exponent, shared, fft, {}, quick);
-        log("Time for %12s using BIGLIT=%u is %6.1f\n", fft.spec().c_str(), biglit, cost);
+        log(_("Time for %12s using BIGLIT=%u is %6.1f\n"), fft.spec().c_str(), biglit, cost);
         if (biglit == current_biglit) current_cost = cost;
         if (best_cost < 0.0 || cost < best_cost) { best_cost = cost; best_biglit = biglit; }
       }
-      log("Best BIGLIT is %u.  Default BIGLIT is 1.  The BIGLIT=0 option will probably be deprecated.\n", best_biglit);
+      log(_("Best BIGLIT is %u.  Default BIGLIT is 1.  The BIGLIT=0 option will probably be deprecated.\n"), best_biglit);
       configsUpdate(current_cost, best_cost, 0.003, "BIGLIT", best_biglit, newConfigKeyVals, suggestedConfigKeyVals);
       args->flags["BIGLIT"] = to_string(best_biglit);
     }
@@ -1311,7 +1312,7 @@ skip_1K_256 = false;
               if (w == 0 && test.width > 1024) continue;
               FFTConfig const fft{test, variant_WMH (w, 0, 1), CARRY_32};
               cost = timeConfig(primes.prevPrime(fft.maxExp()), shared, fft, {}, adjusted_quick);
-              log("Fast width search %6.1f %12s\n", cost, fft.spec().c_str());
+              log(_("Fast width search %6.1f %12s\n"), cost, fft.spec().c_str());
               if (min_cost < 0.0 || cost < min_cost) { min_cost = cost; fastest_width = w; }
             }
             fastest_width_variants[shape.width] = fastest_width;
@@ -1333,7 +1334,7 @@ skip_1K_256 = false;
               if (h == 0 && test.height > 1024) continue;
               FFTConfig const fft{test, variant_WMH (1, 0, h), CARRY_32};
               cost = timeConfig(primes.prevPrime(fft.maxExp()), shared, fft, {}, quick);
-              log("Fast height search %6.1f %12s\n", cost, fft.spec().c_str());
+              log(_("Fast height search %6.1f %12s\n"), cost, fft.spec().c_str());
               if (min_cost < 0.0 || cost < min_cost) { min_cost = cost; fastest_height = h; }
             }
             fastest_height_variants[shape.height] = fastest_height;

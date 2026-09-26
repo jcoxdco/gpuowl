@@ -24,17 +24,19 @@ jobs:
         # yum update -y
         yum install -y centos-release-scl epel-release
         sed -i -e '/^mirrorlist/d;/^# *baseurl=/{s,^# *,,;s,/mirror,/vault,;}' /etc/yum.repos.d/CentOS*.repo
-        yum install -y devtoolset-11-gcc-c++ devtoolset-11-libstdc++-static make git ocl-icd-devel
+        yum install -y devtoolset-11-gcc-c++ devtoolset-11-libstdc++-static make git ocl-icd-devel gettext
 
         source /opt/rh/devtoolset-11/enable
         g++ --version
         ldd --version
 
         make STATIC_RUNTIME=1 -j "$(nproc)"
+        make locale
         cp -vr README.* LICENSE tools/ build-release/
         cd build-release
         rm -f -- *.o
         ./prpll -h
+        ./prpll -lang es -h > /dev/null
         EOF
     - uses: actions/upload-artifact@v7
       with:
@@ -71,11 +73,11 @@ jobs:
           # yum update -y
           yum install -y centos-release-scl epel-release
           sed -i -e '/^mirrorlist/d;/^# *baseurl=/{s,^# *,,;s,/mirror,/vault,;}' /etc/yum.repos.d/CentOS*.repo
-          yum install -y devtoolset-11-gcc-c++ devtoolset-11-libstdc++-static make git
+          yum install -y devtoolset-11-gcc-c++ devtoolset-11-libstdc++-static make git gettext
           source /opt/rh/devtoolset-11/enable
         else
           # dnf update -y
-          dnf install -y gcc-toolset-11-gcc-c++ make git
+          dnf install -y gcc-toolset-11-gcc-c++ make git gettext
           source /opt/rh/gcc-toolset-11/enable
         fi
 
@@ -83,6 +85,7 @@ jobs:
         ldd --version
 
         make CUDA=1 STATIC_RUNTIME=1 STATIC_CUDA=${{ matrix.cuda != '10.2' && '1' || '0' }} -j "$(nproc)"
+        make CUDA=1 locale
         cp -vr README.* LICENSE tools/ build-cuda/
         cd build-cuda
         rm -f -- *.o
@@ -106,15 +109,25 @@ jobs:
         fetch-depth: 0
         fetch-tags: true
     - uses: step-security/msvc-dev-cmd@v1
-    - name: Install OpenCL
+    - name: Install OpenCL and libintl
       run: |
-        vcpkg install opencl
+        vcpkg install opencl gettext-libintl:x64-windows
+        C:\msys64\usr\bin\pacman.exe -S --noconfirm --needed gettext
     - name: Script
       run: |
         msbuild PRPLL.sln /m /p:Configuration=OpenCL-Release /p:StaticRuntime=true /p:OpenCLRoot=C:\vcpkg\installed\x64-windows
         Copy-Item -Recurse README.*, LICENSE, tools\ build-msvc\OpenCL\Release\
+        # PRPLL loads libintl at run time from its own directory; without it (or without locale\) it runs in English.
+        Copy-Item C:\vcpkg\installed\x64-windows\bin\intl*.dll, C:\vcpkg\installed\x64-windows\bin\iconv*.dll, C:\vcpkg\installed\x64-windows\bin\charset*.dll build-msvc\OpenCL\Release\
+        foreach ($po in Get-ChildItem po\*.po) {
+          $dir = "build-msvc/OpenCL/Release/locale/$($po.BaseName)/LC_MESSAGES"
+          New-Item -ItemType Directory -Force $dir | Out-Null
+          C:\msys64\usr\bin\msgfmt.exe --check -o "$dir/prpll.mo" "po/$($po.Name)"
+          if ($LASTEXITCODE) { exit 1 }
+        }
         cd build-msvc\OpenCL\Release\
         & .\prpll -h
+        & .\prpll -lang es -h > $null
     - uses: actions/upload-artifact@v7
       with:
         name: PRPLL-NTT_win_x64_opencl
@@ -138,10 +151,22 @@ jobs:
       uses: N-Storm/cuda-toolkit@v0.2.34
       with:
         cuda: ${{ matrix.cuda }}
+    - name: Install libintl
+      run: |
+        vcpkg install gettext-libintl:x64-windows
+        C:\msys64\usr\bin\pacman.exe -S --noconfirm --needed gettext
     - name: Script
       run: |
         msbuild PRPLL.sln /m /p:Configuration=CUDA-Release /p:StaticRuntime=true /p:StaticCUDA=${{ matrix.cuda != '10.2.89' && 'true' || 'false' }}
         Copy-Item -Recurse README.*, LICENSE, tools\ build-msvc\CUDA\Release\
+        # PRPLL loads libintl at run time from its own directory; without it (or without locale\) it runs in English.
+        Copy-Item C:\vcpkg\installed\x64-windows\bin\intl*.dll, C:\vcpkg\installed\x64-windows\bin\iconv*.dll, C:\vcpkg\installed\x64-windows\bin\charset*.dll build-msvc\CUDA\Release\
+        foreach ($po in Get-ChildItem po\*.po) {
+          $dir = "build-msvc/CUDA/Release/locale/$($po.BaseName)/LC_MESSAGES"
+          New-Item -ItemType Directory -Force $dir | Out-Null
+          C:\msys64\usr\bin\msgfmt.exe --check -o "$dir/prpll.mo" "po/$($po.Name)"
+          if ($LASTEXITCODE) { exit 1 }
+        }
         cd build-msvc\CUDA\Release\
         if ("${{ matrix.cuda }}" -eq "10.2.89") {
           Copy-Item "$env:CUDA_PATH\bin\nvrtc64_102_0.dll", "$env:CUDA_PATH\bin\nvrtc-builtins64_102.dll" .

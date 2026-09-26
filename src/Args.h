@@ -16,6 +16,7 @@ using KeyVal = std::pair<std::string, std::string>;
 class Args {
 private:
   int proofPow = -1;
+  bool fromConfig = false;  // parse() is reading a config file rather than the command line
 
 public:
   static vector<KeyVal> splitArgLine(const std::string& inputLine);

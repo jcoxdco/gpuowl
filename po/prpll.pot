@@ -1,0 +1,1013 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PRPLL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PRPLL\n"
+"Report-Msgid-Bugs-To: https://github.com/gwoltman/gpuowl/issues\n"
+"POT-Creation-Date: 2026-09-26 13:04-0600\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/Args.cpp:148
+#, c-format
+msgid ""
+"PRPLL is \"PRobable Prime and Lucas-Lehmer Categorizer\", AKA \"Purple-"
+"cat\"\n"
+msgstr ""
+
+#: src/Args.cpp:150
+#, c-format
+msgid ""
+"PRPLL is an OpenCL/CUDA (GPU) program for primality testing Mersenne numbers "
+"(of the form 2^n - 1).\n"
+msgstr ""
+
+#: src/Args.cpp:152
+#, c-format
+msgid ""
+"To check that OpenCL is installed correctly use the command \"clinfo\". If "
+"clinfo does not find any\n"
+"devices or otherwise fails, this program will not run.\n"
+msgstr ""
+
+#: src/Args.cpp:155
+#, c-format
+msgid ""
+"This program is tested on Linux/ROCm (AMD GPUs); it also runs on Windows and "
+"on Nvidia GPUs.\n"
+msgstr ""
+
+#: src/Args.cpp:157
+#, c-format
+msgid ""
+"For information about Mersenne primes search see https://www.mersenne.org/\n"
+msgstr ""
+
+#: src/Args.cpp:159
+#, c-format
+msgid ""
+"Run \"prpll -h\"; If this displays a list of OpenCL devices, it means that "
+"PRPLL is detecting the GPUs\n"
+"and should be able to run.\n"
+msgstr ""
+
+#: src/Args.cpp:162
+#, c-format
+msgid ""
+"Worktodo:\n"
+"PRPLL keeps the active tasks in per-worker files worktodo-0.txt, "
+"worktodo-1.txt etc in the local directory.\n"
+"These per-worker files are supplied from the global worktodo.txt file if "
+"-pool is used.\n"
+"In turn the work files can be supplied through AutoPrimeNet, located at "
+"https://download.mersenne.ca/AutoPrimeNet\n"
+msgstr ""
+
+#: src/Args.cpp:167
+#, c-format
+msgid ""
+"It is also possible to manually add exponents by adding lines of the form "
+"\"PRP=118063003\" to worktodo-<N>.txt\n"
+msgstr ""
+
+#: src/Args.cpp:169
+#, c-format
+msgid ""
+"The configuration options listed below can be passed on the command line or "
+"can be put in a file\n"
+"named \"config.txt\" in the prpll run directory.\n"
+msgstr ""
+
+#: src/Args.cpp:173
+#, c-format
+msgid ""
+"-h                 : print general help, list of FFTs, list of devices\n"
+msgstr ""
+
+#: src/Args.cpp:174
+#, c-format
+msgid ""
+"-info <fft>        : print detailed information about the given FFT; e.g. "
+"-info 1K:13:256\n"
+msgstr ""
+
+#: src/Args.cpp:175
+#, c-format
+msgid ""
+"-dir <folder>      : specify local work directory (containing worktodo-"
+"<N>.txt, results-<N>.txt, config.txt,\n"
+"                     gpuowl-<N>.log)\n"
+msgstr ""
+
+#: src/Args.cpp:177
+#, c-format
+msgid ""
+"-pool <dir>        : specify a directory with the shared (pooled) "
+"worktodo.txt and config.txt\n"
+"                     Multiple PRPLL instances, each in its own directory, "
+"can share a pool of assignments.\n"
+"                     Results are still written locally, to results-<N>.txt "
+"in each instance's own directory.\n"
+msgstr ""
+
+#: src/Args.cpp:180
+#, c-format
+msgid "-verbose           : print more log, useful for developers\n"
+msgstr ""
+
+#: src/Args.cpp:181
+#, c-format
+msgid "-version           : print only the version and exit\n"
+msgstr ""
+
+#: src/Args.cpp:182
+#, c-format
+msgid ""
+"-lang <tag>        : language for the help and for translated status "
+"messages, e.g. es or es_ES; en or C for English.\n"
+"                     Messages without a translation stay in English.  Only "
+"read from the command line.\n"
+"                     Default: the system language.\n"
+msgstr ""
+
+#: src/Args.cpp:185
+#, c-format
+msgid ""
+"-user <name>       : specify the mersenne.org user name (for result "
+"reporting)\n"
+msgstr ""
+
+#: src/Args.cpp:186
+#, c-format
+msgid ""
+"-workers <N>       : specify the number of parallel PRP tests to run "
+"(default 1)\n"
+msgstr ""
+
+#: src/Args.cpp:188
+#, c-format
+msgid ""
+"-fft <spec>        : specify FFT or FFTs to use:\n"
+"                     - a specific configuration: 256:13:1K\n"
+"                     - a FFT size: 6.5M\n"
+"                     - a size range: 7M-8M\n"
+"                     - a list: 256:13:1K,8M\n"
+"                     See the list of FFTs at the end.\n"
+msgstr ""
+
+#: src/Args.cpp:195
+#, c-format
+msgid ""
+"-od <value>        : Overdrive the FFT range (ROE, CARRY32 limits). This "
+"allows to use a lower FFT for a given\n"
+"                     exponent (thus faster), but increases the risk of "
+"errors. The presence of errors is detected,\n"
+"                     but the errors are nevertheless costly computationally "
+"and better avoided.\n"
+"                     A <value> of 1 extends the range by 0.1%% (and this "
+"would be acceptable); a value of 10\n"
+"                     extends the range by 1%% (and this would be quite too "
+"much WRT errors).\n"
+msgstr ""
+
+#: src/Args.cpp:201
+#, c-format
+msgid ""
+"-block <value>     : PRP block size, one of: 1000, 500, 200. Default 1000.\n"
+msgstr ""
+
+#: src/Args.cpp:202
+#, c-format
+msgid ""
+"-carry long|short  : force carry type. Short carry may be faster, but "
+"requires high bits/word.\n"
+msgstr ""
+
+#: src/Args.cpp:203
+#, c-format
+msgid ""
+"-prp <exponent>    : run a single PRP test and exit, ignoring worktodo.txt\n"
+msgstr ""
+
+#: src/Args.cpp:204
+#, c-format
+msgid ""
+"-ll <exponent>     : run a single LL test and exit, ignoring worktodo.txt\n"
+msgstr ""
+
+#: src/Args.cpp:205
+#, c-format
+msgid "-verify <file>     : verify PRP-proof contained in <file>\n"
+msgstr ""
+
+#: src/Args.cpp:206
+#, c-format
+msgid ""
+"-smallest          : work on smallest exponent in worktodo.txt rather than "
+"the first exponent in worktodo.txt\n"
+msgstr ""
+
+#: src/Args.cpp:207
+#, c-format
+msgid ""
+"-proof <power>     : generate proof of power <power> (default: optimal "
+"depending on exponent).\n"
+"                     A lower power reduces disk space requirements but "
+"increases the verification cost.\n"
+"                     A higher power increases disk usage a lot.\n"
+"                     e.g. proof power 10 for a 120M exponent uses about "
+"%.0fGB of disk space.\n"
+"                     -proof 0 disables proof generation: the PRP result is "
+"reported without a proof.\n"
+msgstr ""
+
+#: src/Args.cpp:213
+#, c-format
+msgid "-iters <N>         : run next PRP test for <N> iterations and exit.\n"
+msgstr ""
+
+#: src/Args.cpp:214
+#, c-format
+msgid ""
+"-save <N>          : specify the number of savefiles to keep (default %u).\n"
+msgstr ""
+
+#: src/Args.cpp:215
+#, c-format
+msgid "-noclean           : do not delete data after the test is complete.\n"
+msgstr ""
+
+#: src/Args.cpp:216
+#, c-format
+msgid ""
+"-cache             : use binary kernel cache; useful with repeated use of "
+"-roeTune and -tune\n"
+msgstr ""
+
+#: src/Args.cpp:217
+#, c-format
+msgid ""
+"-roe               : measure the Round-Off Error (Z) for more iterations "
+"(slow)\n"
+msgstr ""
+
+#: src/Args.cpp:218
+#, c-format
+msgid ""
+"-time              : collect and print a per-kernel GPU timing profile\n"
+msgstr ""
+
+#: src/Args.cpp:219
+#, c-format
+msgid ""
+"-log <N>           : log progress and checkpoint every <N> iterations "
+"(positive multiple of 1000; default 20000)\n"
+msgstr ""
+
+#: src/Args.cpp:221
+#, c-format
+msgid ""
+"-use <define>      : comma separated list of defines for configuring openCL "
+"code, such as:\n"
+msgstr ""
+
+#: src/Args.cpp:222
+#, c-format
+msgid ""
+"  -use FAST_BARRIER: on AMD Radeon VII and older AMD GPUs, use a faster "
+"barrier().  This option\n"
+"                     may not work on Nvidia GPUs.  It is ignored on RDNA and "
+"on MI200 and later\n"
+"                     AMD GPUs, where the faster barrier gives wrong "
+"results.\n"
+msgstr ""
+
+#: src/Args.cpp:225
+#, c-format
+msgid ""
+"  -use NO_ASM      : do not use __asm() blocks (inline assembly); also "
+"accepted as NOASM\n"
+msgstr ""
+
+#: src/Args.cpp:226
+#, c-format
+msgid ""
+"  -use TAIL_KERNELS=<val> : change how tailSquare and tailMul operate "
+"according to <val>:\n"
+"                     0 = single wide, single kernel\n"
+"                     1 = single wide, two kernels\n"
+"                     2 = double wide, single kernel\n"
+"                     3 = double wide, two kernels\n"
+msgstr ""
+
+#: src/Args.cpp:231
+#, c-format
+msgid ""
+"  -use TAIL_TRIGS=<val> : change how tailSquare computes final trig values "
+"according to <val>:\n"
+"                     2 = calculate from scratch, no memory read\n"
+"                     1 = calculate using one complex multiply from cached "
+"memory and uncached memory\n"
+"                     0 = read trig values from memory\n"
+msgstr ""
+
+#: src/Args.cpp:235
+#, c-format
+msgid ""
+"  -use INPLACE=n   : Perform tranforms in-place.  Great if the reduced "
+"memory usage fits in the GPU's L2 cache.\n"
+"                     0 = not in-place, 1 = nVidia friendly access pattern, 2 "
+"= AMD friendly access pattern.\n"
+msgstr ""
+
+#: src/Args.cpp:237
+#, c-format
+msgid ""
+"  -use PAD=<val>   : insert pad bytes to possibly improve memory access "
+"patterns.  Val is number bytes to pad.\n"
+msgstr ""
+
+#: src/Args.cpp:238
+#, c-format
+msgid ""
+"  -use MIDDLE_IN_LDS_TRANSPOSE=0|1  : Transpose values in local memory "
+"before writing to global memory\n"
+msgstr ""
+
+#: src/Args.cpp:239
+#, c-format
+msgid ""
+"  -use MIDDLE_OUT_LDS_TRANSPOSE=0|1 : Transpose values in local memory "
+"before writing to global memory\n"
+msgstr ""
+
+#: src/Args.cpp:240
+#, c-format
+msgid ""
+"  -use TABMUL_CHAIN=<val>: Controls how trig values are obtained in WIDTH "
+"and HEIGHT when FFT-spec is 1.\n"
+"                     0 = Read one trig value and compute the next 3 or 7.\n"
+"                     1 = All trig values are pre-computed and read from "
+"memmory.\n"
+msgstr ""
+
+#: src/Args.cpp:244
+#, c-format
+msgid ""
+"  -use DEBUG       : enable asserts in OpenCL kernels (slow, developers)\n"
+msgstr ""
+
+#: src/Args.cpp:245
+#, c-format
+msgid ""
+"  -use STATS=<val> : enable carry statistics collection & logging "
+"(developers), for the kernel according to <val>:\n"
+"                     1 = CarryFused, 2 = CarryFusedMul, 4 = CarryA, 8 = "
+"CarryMul\n"
+msgstr ""
+
+#: src/Args.cpp:248
+#, c-format
+msgid ""
+"-tune <options>    : Looks for best settings to include in config.txt.  "
+"Times many FFTs to find fastest one to test exponents -- written to "
+"tune.txt.\n"
+"                     An -fft <spec> can be given on the command line to "
+"limit which FFTs are timed.\n"
+"                     Options are not required.  If present, the options are "
+"a comma separated list from below.\n"
+msgstr ""
+
+#: src/Args.cpp:251
+#, c-format
+msgid ""
+"                         noconfig     - Skip timings to find best config.txt "
+"settings.\n"
+msgstr ""
+
+#: src/Args.cpp:252
+#, c-format
+msgid ""
+"                         inplace      - Skip timings for not-in-place FFTs "
+"and NTTs.  All nVidia GPUs seem to prefer in-place FFTs and NTTs.\n"
+msgstr ""
+
+#: src/Args.cpp:253
+#, c-format
+msgid ""
+"                         fp64         - Tune for settings that affect FP64 "
+"FFTs.  Time FP64 FFTs for tune.txt.\n"
+msgstr ""
+
+#: src/Args.cpp:254
+#, c-format
+msgid ""
+"                         ntt          - Tune for settings that affect "
+"integer NTTs.  Time integer NTTs for tune.txt.\n"
+msgstr ""
+
+#: src/Args.cpp:255
+#, c-format
+msgid ""
+"                         nofp32       - Do not tune for settings that affect "
+"FP32 FFTs.  Some openCL compilers have trouble with FP32.\n"
+msgstr ""
+
+#: src/Args.cpp:256
+#, c-format
+msgid ""
+"                         minexp=<val> - Time FFTs to find the best one for "
+"exponents greater than <val>.  Default 75000000.\n"
+msgstr ""
+
+#: src/Args.cpp:257
+#, c-format
+msgid ""
+"                         maxexp=<val> - Time FFTs to find the best one for "
+"exponents less than <val>.  Default 350000000.\n"
+"                                        Without an -fft <spec>, only FFTs in "
+"[minexp, maxexp] are timed, so tuning\n"
+"                                        for a small exponent (e.g. PRP-CF at "
+"18M) needs both ends set low, e.g.\n"
+"                                        -tune "
+"minexp=10000000,maxexp=20000000\n"
+msgstr ""
+
+#: src/Args.cpp:261
+#, c-format
+msgid ""
+"                         fp6431       - Time FP64+M31 FFTs for tune.txt.  "
+"Only GPUs with great FP64 performance will find this beneficial.\n"
+msgstr ""
+
+#: src/Args.cpp:262
+#, c-format
+msgid ""
+"                         quick=<val>  - Use higher values for a quicker, "
+"potentially less accurate tune.  Val ranges from 1 to 10.\n"
+msgstr ""
+
+#: src/Args.cpp:263
+#, c-format
+msgid ""
+"-device <N>        : select the GPU at position N in the list of devices\n"
+msgstr ""
+
+#: src/Args.cpp:264
+#, c-format
+msgid ""
+"-uid    <UID>      : select the GPU with the given UID (on ROCm/AMDGPU, "
+"Linux)\n"
+msgstr ""
+
+#: src/Args.cpp:265
+#, c-format
+msgid ""
+"-pci    <BDF>      : select the GPU with the given PCI BDF, e.g. "
+"\"0c:00.0\"\n"
+msgstr ""
+
+#: src/Args.cpp:267
+#, c-format
+msgid ""
+"Device selection : use one of -uid <UID>, -pci <BDF>, -device <N>, see the "
+"list below\n"
+msgstr ""
+
+#: src/Args.cpp:272
+#, c-format
+msgid ""
+" N  : PCI BDF |   UID            |   Driver                 |    Device\n"
+msgstr ""
+
+#: src/Args.cpp:288
+#, c-format
+msgid ""
+"FFT Configurations (specify with -fft <type>:<width>:<middle>:<height> from "
+"the set below):\n"
+msgstr ""
+
+#: src/Args.cpp:294
+#, c-format
+msgid "FFT type %d: %s\n"
+msgstr ""
+
+#: src/Args.cpp:295
+#, c-format
+msgid " Size   MaxExp   BPW    FFT\n"
+msgstr ""
+
+#: src/Args.cpp:341
+#, c-format
+msgid "config: %s\n"
+msgstr ""
+
+#: src/clwrap.cpp:317
+#, c-format
+msgid "This OpenCL compiler does not accept __asm().  Using NO_ASM.\n"
+msgstr ""
+
+#: src/Gpu.cpp:2360
+#, c-format
+msgid "%2s %9<PRIu64> %016<PRIx64> %s ETA %s; "
+msgstr ""
+
+#: src/Gpu.cpp:2374
+#, c-format
+msgid "%sZ=%.0f (avg %.1f) %s\n"
+msgstr ""
+
+#: src/Gpu.cpp:2521
+#, c-format
+msgid "Proof '%s' verification %s\n"
+msgstr ""
+
+#: src/Gpu.cpp:2524
+#, c-format
+msgid "Proof '%s' generated\n"
+msgstr ""
+
+#: src/Gpu.cpp:2559
+#, c-format
+msgid "%s %9<PRIu64> on-load: blockSize %d, %016<PRIx64>\n"
+msgstr ""
+
+#: src/Gpu.cpp:2582
+#, c-format
+msgid "Proof of power %u requires about %.1fGB of disk space\n"
+msgstr ""
+
+#: src/Gpu.cpp:2891 src/Gpu.cpp:3056 src/Gpu.cpp:3144
+#, c-format
+msgid "Stopping, please wait..\n"
+msgstr ""
+
+#: src/main.cpp:43
+#, c-format
+msgid "PRPLL %s, instance %d\n"
+msgstr ""
+
+#: src/main.cpp:164
+#, c-format
+msgid "PRPLL %s starting\n"
+msgstr ""
+
+#: src/main.cpp:231
+#, c-format
+msgid "Bye\n"
+msgstr ""
+
+#: src/Signal.cpp:32
+#, c-format
+msgid "Stop requested by the '%s' file\n"
+msgstr ""
+
+#: src/tune.cpp:115 src/tune.cpp:117
+#, c-format
+msgid "%s failed: %s\n"
+msgstr ""
+
+#: src/tune.cpp:410
+#, c-format
+msgid ""
+"-tune: minexp=%<PRIu64> is greater than maxexp=%<PRIu64>; give both minexp= "
+"and maxexp= to tune a narrow range, e.g. -tune "
+"minexp=10000000,maxexp=20000000 for a small exponent such as PRP-CF at 18M\n"
+msgstr ""
+
+#: src/tune.cpp:418
+#, c-format
+msgid ""
+"This device does not support FP64.  Only FFT types without FP64 data will be "
+"tuned.\n"
+msgstr ""
+
+#: src/tune.cpp:420
+#, c-format
+msgid "No FFT without FP64 in '%s'\n"
+msgstr ""
+
+#: src/tune.cpp:459
+#, c-format
+msgid ""
+"Checking whether this GPU is better suited for double-precision FFTs or "
+"integer NTTs.\n"
+msgstr ""
+
+#: src/tune.cpp:463
+#, c-format
+msgid "Time for FP64 FFT %12s is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:467
+#, c-format
+msgid "Time for M31*M61 NTT %12s is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:472
+#, c-format
+msgid ""
+"FP64 FFTs are significantly faster than integer NTTs.  No NTT tuning will be "
+"performed.\n"
+msgstr ""
+
+#: src/tune.cpp:474
+#, c-format
+msgid ""
+"FP64 FFTs are not significantly faster than integer NTTs.  NTT tuning will "
+"be performed.\n"
+msgstr ""
+
+#: src/tune.cpp:481
+#, c-format
+msgid ""
+"FP64 FFTs are significantly slower than integer NTTs.  No FP64 tuning will "
+"be performed.\n"
+msgstr ""
+
+#: src/tune.cpp:483
+#, c-format
+msgid ""
+"FP64 FFTs are not significantly slower than integer NTTs.  FP64 tuning will "
+"be performed.\n"
+msgstr ""
+
+#: src/tune.cpp:490
+#, c-format
+msgid ""
+"Beginning timing of various options.  These settings will be appended to "
+"config.txt.\n"
+msgstr ""
+
+#: src/tune.cpp:491
+#, c-format
+msgid "Please read config.txt after -tune completes.\n"
+msgstr ""
+
+#: src/tune.cpp:516
+#, c-format
+msgid "Time for %12s using IN_WG=%u, IN_SIZEX=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:521
+#, c-format
+msgid "Best IN_WG, IN_SIZEX is %u, %u.  Default is 128, 16.\n"
+msgstr ""
+
+#: src/tune.cpp:538
+#, c-format
+msgid "Time for %12s using OUT_WG=%u, OUT_SIZEX=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:543
+#, c-format
+msgid "Best OUT_WG, OUT_SIZEX is %u, %u.  Default is 128, 16.\n"
+msgstr ""
+
+#: src/tune.cpp:561
+#, c-format
+msgid "Time for %12s using PAD=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:565
+#, c-format
+msgid "Best PAD is %u bytes.  Default PAD is %u bytes.\n"
+msgstr ""
+
+#: src/tune.cpp:581
+#, c-format
+msgid "Time for %12s using MIDDLE_IN_LDS_TRANSPOSE=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:585
+#, c-format
+msgid ""
+"Best MIDDLE_IN_LDS_TRANSPOSE is %u.  Default MIDDLE_IN_LDS_TRANSPOSE is 1.\n"
+msgstr ""
+
+#: src/tune.cpp:601
+#, c-format
+msgid "Time for %12s using MIDDLE_OUT_LDS_TRANSPOSE=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:605
+#, c-format
+msgid ""
+"Best MIDDLE_OUT_LDS_TRANSPOSE is %u.  Default MIDDLE_OUT_LDS_TRANSPOSE is "
+"1.\n"
+msgstr ""
+
+#: src/tune.cpp:625
+#, c-format
+msgid "Time for %12s using INPLACE=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:629
+#, c-format
+msgid ""
+"Best INPLACE is %u.  Default INPLACE is 0.  Best INPLACE setting may be "
+"different for other FFT lengths.\n"
+msgstr ""
+
+#: src/tune.cpp:649
+#, c-format
+msgid "Time for %12s using FFT load=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:652
+#, c-format
+msgid "Best FFT load is %u.  Default is 0.\n"
+msgstr ""
+
+#: src/tune.cpp:667
+#, c-format
+msgid "Time for %12s using FFT store=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:670
+#, c-format
+msgid "Best FFT store is %u.  Default is 0.\n"
+msgstr ""
+
+#: src/tune.cpp:688
+#, c-format
+msgid "Time for %12s using carry shuttle load=%u, store=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:691
+#, c-format
+msgid "Best carry shuttle load/store is %u/%u.  Default is 0/0.\n"
+msgstr ""
+
+#: src/tune.cpp:708
+#, c-format
+msgid "Time for %12s using Trig frequently used load=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:711
+#, c-format
+msgid "Best Trig frequently used load is %u.  Default is 0.\n"
+msgstr ""
+
+#: src/tune.cpp:726
+#, c-format
+msgid "Time for %12s using Trig several uses load=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:729
+#, c-format
+msgid "Best Trig several uses load is %u.  Default is 0.\n"
+msgstr ""
+
+#: src/tune.cpp:744
+#, c-format
+msgid "Time for %12s using Trig used once load=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:747
+#, c-format
+msgid "Best Trig used once load is %u.  Default is 0.\n"
+msgstr ""
+
+#: src/tune.cpp:771
+#, c-format
+msgid "Time for %12s using FAST_BARRIER=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:775
+#, c-format
+msgid "Best FAST_BARRIER is %u.  Default FAST_BARRIER is 0.\n"
+msgstr ""
+
+#: src/tune.cpp:792
+#, c-format
+msgid "Time for %12s using TAIL_KERNELS=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:797
+#, c-format
+msgid "Best TAIL_KERNELS is %u.  Default TAIL_KERNELS is 2.\n"
+msgstr ""
+
+#: src/tune.cpp:799
+#, c-format
+msgid ""
+"Best TAIL_KERNELS is %u (but best may be %u when running two workers on one "
+"GPU).  Default TAIL_KERNELS is 2.\n"
+msgstr ""
+
+#: src/tune.cpp:815
+#, c-format
+msgid "Time for %12s using TAIL_TRIGS=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:819
+#, c-format
+msgid "Best TAIL_TRIGS is %u.  Default TAIL_TRIGS is 2.\n"
+msgstr ""
+
+#: src/tune.cpp:836
+#, c-format
+msgid "Time for %12s using TAIL_TRIGS31=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:840
+#, c-format
+msgid "Best TAIL_TRIGS31 is %u.  Default TAIL_TRIGS31 is 0.\n"
+msgstr ""
+
+#: src/tune.cpp:857
+#, c-format
+msgid "Time for %12s using TAIL_TRIGS32=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:861
+#, c-format
+msgid "Best TAIL_TRIGS32 is %u.  Default TAIL_TRIGS32 is 2.\n"
+msgstr ""
+
+#: src/tune.cpp:878
+#, c-format
+msgid "Time for %12s using TAIL_TRIGS61=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:882
+#, c-format
+msgid "Best TAIL_TRIGS61 is %u.  Default TAIL_TRIGS61 is 0.\n"
+msgstr ""
+
+#: src/tune.cpp:898
+#, c-format
+msgid "Time for %12s using TABMUL_CHAIN=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:902
+#, c-format
+msgid "Best TABMUL_CHAIN is %u.  Default TABMUL_CHAIN is 0.\n"
+msgstr ""
+
+#: src/tune.cpp:919
+#, c-format
+msgid "Time for %12s using TABMUL_CHAIN31=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:923
+#, c-format
+msgid "Best TABMUL_CHAIN31 is %u.  Default TABMUL_CHAIN31 is 0.\n"
+msgstr ""
+
+#: src/tune.cpp:940
+#, c-format
+msgid "Time for %12s using TABMUL_CHAIN32=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:944
+#, c-format
+msgid "Best TABMUL_CHAIN32 is %u.  Default TABMUL_CHAIN32 is 0.\n"
+msgstr ""
+
+#: src/tune.cpp:961
+#, c-format
+msgid "Time for %12s using TABMUL_CHAIN61=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:965
+#, c-format
+msgid "Best TABMUL_CHAIN61 is %u.  Default TABMUL_CHAIN61 is 0.\n"
+msgstr ""
+
+#: src/tune.cpp:982
+#, c-format
+msgid "Time for %12s using MODM31=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:986
+#, c-format
+msgid "Best MODM31 is %u.  Default MODM31 is 0.\n"
+msgstr ""
+
+#: src/tune.cpp:1002
+#, c-format
+msgid "Time for %12s using UNROLL_W=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:1006
+#, c-format
+msgid "Best UNROLL_W is %u.  Default UNROLL_W is %u.\n"
+msgstr ""
+
+#: src/tune.cpp:1022
+#, c-format
+msgid "Time for %12s using UNROLL_H=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:1026
+#, c-format
+msgid "Best UNROLL_H is %u.  Default UNROLL_H is %u.\n"
+msgstr ""
+
+#: src/tune.cpp:1042
+#, c-format
+msgid "Time for %12s using ZEROHACK_W=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:1046
+#, c-format
+msgid "Best ZEROHACK_W is %u.  Default ZEROHACK_W is 1.\n"
+msgstr ""
+
+#: src/tune.cpp:1062
+#, c-format
+msgid "Time for %12s using ZEROHACK_H=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:1066
+#, c-format
+msgid "Best ZEROHACK_H is %u.  Default ZEROHACK_H is 1.\n"
+msgstr ""
+
+#: src/tune.cpp:1082
+#, c-format
+msgid "Time for %12s using WMUL=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:1086
+#, c-format
+msgid "Best WMUL is %u.  Default WMUL is 2.\n"
+msgstr ""
+
+#: src/tune.cpp:1102
+#, c-format
+msgid "Time for %12s using MULTI_Q=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:1106
+#, c-format
+msgid "Best MULTI_Q is %u.  Default MULTI_Q is 0.\n"
+msgstr ""
+
+#: src/tune.cpp:1124
+#, c-format
+msgid "Time for %12s using L1CUDA=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:1128
+#, c-format
+msgid "Best L1CUDA is %u.  Default L1CUDA is 0.\n"
+msgstr ""
+
+#: src/tune.cpp:1144
+#, c-format
+msgid "Time for %12s using GRAPHS=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:1148
+#, c-format
+msgid "Best GRAPHS is %u.  Default GRAPHS is 1.\n"
+msgstr ""
+
+#: src/tune.cpp:1164
+#, c-format
+msgid "Time for %12s using NOREG=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:1168
+#, c-format
+msgid "Best NOREG is %u.  Default NOREG is 0.\n"
+msgstr ""
+
+#: src/tune.cpp:1185
+#, c-format
+msgid "Time for %12s using BIGLIT=%u is %6.1f\n"
+msgstr ""
+
+#: src/tune.cpp:1189
+#, c-format
+msgid ""
+"Best BIGLIT is %u.  Default BIGLIT is 1.  The BIGLIT=0 option will probably "
+"be deprecated.\n"
+msgstr ""
+
+#: src/tune.cpp:1319
+#, c-format
+msgid "Fast width search %6.1f %12s\n"
+msgstr ""
+
+#: src/tune.cpp:1341
+#, c-format
+msgid "Fast height search %6.1f %12s\n"
+msgstr ""
+
+#: src/Worktodo.cpp:178
+#, c-format
+msgid "No work to do found.  Add work to %s.\n"
+msgstr ""

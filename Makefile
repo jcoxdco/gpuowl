@@ -55,6 +55,26 @@ ifeq ($(findstring MINGW, $(HOST_OS)), MINGW)
  CPPFLAGS += -DWINVER=0x0601 -D_WIN32_WINNT=0x0601
  LDFLAGS += -Wl,--subsystem,console:6.01
 endif
+
+# NLS=1 translates the help and the status messages through GNU gettext (catalogs in po/, see "make locale");
+# NLS=0 builds an English-only binary.  gettext is part of glibc; MinGW needs libintl (MSYS2's gettext package)
+# and is built with it when libintl.h is found; macOS has no system libintl.
+# LOCALEDIR is where the catalogs are looked for when there is no "locale" directory next to the executable.
+ifeq ($(HOST_OS), Darwin)
+ NLS ?= 0
+else ifeq ($(findstring MINGW, $(HOST_OS)), MINGW)
+ NLS ?= $(if $(shell $(CXX) $(CPPFLAGS) -include libintl.h -fsyntax-only -x c++ /dev/null 2>/dev/null && echo 1),1,0)
+else
+ NLS ?= 1
+endif
+LOCALEDIR ?= /usr/share/locale
+
+ifeq ($(NLS), 1)
+ CPPFLAGS += -DPRPLL_NLS=1 -DPRPLL_LOCALEDIR='"$(LOCALEDIR)"'
+ ifeq ($(findstring MINGW, $(HOST_OS)), MINGW)
+  NLS_LIBS = -lintl -liconv
+ endif
+endif
 # -fext-numeric-literals
 
 ifeq ($(DEBUG), 1)
@@ -68,7 +88,7 @@ CXXFLAGS = -O3 -flto -DNDEBUG $(COMMON_FLAGS)
 
 endif
 
-SRCS1 = fs.cpp Trig.cpp TuneEntry.cpp Primes.cpp tune.cpp CycleFile.cpp TrigBufCache.cpp Event.cpp Queue.cpp TimeInfo.cpp Profile.cpp bundle.cpp Saver.cpp KernelCompiler.cpp Kernel.cpp gpuid.cpp File.cpp Proof.cpp log.cpp Worktodo.cpp common.cpp main.cpp Gpu.cpp clwrap.cpp Task.cpp timeutil.cpp Args.cpp state.cpp Signal.cpp FFTConfig.cpp AllocTrac.cpp sha3.cpp md5.cpp version.cpp
+SRCS1 = fs.cpp Trig.cpp TuneEntry.cpp Primes.cpp tune.cpp CycleFile.cpp TrigBufCache.cpp Event.cpp Queue.cpp TimeInfo.cpp Profile.cpp bundle.cpp Saver.cpp KernelCompiler.cpp Kernel.cpp gpuid.cpp File.cpp Proof.cpp log.cpp Worktodo.cpp common.cpp main.cpp Gpu.cpp clwrap.cpp Task.cpp timeutil.cpp Args.cpp state.cpp Signal.cpp FFTConfig.cpp AllocTrac.cpp sha3.cpp md5.cpp version.cpp i18n.cpp
 
 SRCS2 = test.cpp
 
@@ -91,11 +111,32 @@ amd: $(BIN)/prpll-amd
 #	$(CXX) $(CXXFLAGS) -o $@ $< $(LIBPATH)
 
 $(BIN)/prpll: ${OBJS}
-	$(CXX) $(LDFLAGS) $(CXXFLAGS) -o $@ ${OBJS} $(LIBPATH) $(OPENCL_LIBS)
+	$(CXX) $(LDFLAGS) $(CXXFLAGS) -o $@ ${OBJS} $(LIBPATH) $(OPENCL_LIBS) $(NLS_LIBS)
 
 # Instead of linking with libOpenCL, link with libamdocl64
 $(BIN)/prpll-amd: ${OBJS}
-	$(CXX) $(LDFLAGS) $(CXXFLAGS) -o $@ ${OBJS} $(LIBPATH) -lamdocl64 -L/opt/rocm/lib
+	$(CXX) $(LDFLAGS) $(CXXFLAGS) -o $@ ${OBJS} $(LIBPATH) -lamdocl64 -L/opt/rocm/lib $(NLS_LIBS)
+
+# Translation catalogs.  These need the gettext tools and are not part of the default build.
+# "make pot" re-extracts the marked messages into po/prpll.pot and merges them into each po/<lang>.po;
+# "make locale" compiles each po/<lang>.po into $(BIN)/locale/<lang>/LC_MESSAGES/prpll.mo, and fails
+# on a translation whose printf conversions differ from the English.
+PO_FILES = $(wildcard po/*.po)
+MO_FILES = $(patsubst po/%.po,$(BIN)/locale/%/LC_MESSAGES/prpll.mo,$(PO_FILES))
+
+pot:
+	xgettext -C --from-code=UTF-8 --keyword=_ --flag=_:1:c-format --package-name=PRPLL \
+	  --msgid-bugs-address=https://github.com/gwoltman/gpuowl/issues -o po/prpll.pot \
+	  $(filter-out src/bundle.cpp,$(wildcard src/*.cpp)) $(wildcard src/*.h)
+	for po in $(PO_FILES); do msgmerge --quiet --update --backup=none $$po po/prpll.pot || exit 1; done
+
+locale: $(MO_FILES)
+
+$(BIN)/locale/%/LC_MESSAGES/prpll.mo: po/%.po
+	mkdir -p $(dir $@)
+	msgfmt --check -o $@ $<
+
+.PHONY: pot locale
 
 clean:
 	rm -rf build-debug build-release build-cuda

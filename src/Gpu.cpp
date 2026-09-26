@@ -16,6 +16,7 @@
 #include "TrigBufCache.h"
 #include "fs.h"
 #include "Sha3Hash.h"
+#include "i18n.h"
 
 #include <algorithm>
 #include <limits>
@@ -2350,7 +2351,7 @@ string RoeInfo::toString() const {
 static string makeLogStr(const string& status, u64 k, u64 res, float secsPerIt, u64 nIters) {
   char buf[256];
   
-  snprintf(buf, sizeof(buf), "%2s %9" PRIu64 " %016" PRIx64 " %s ETA %s; ",
+  snprintf(buf, sizeof(buf), _("%2s %9" PRIu64 " %016" PRIx64 " %s ETA %s; "),
            status.c_str(), k, res, /* k / float(nIters) * 100, */
            formatSecsPerIter(secsPerIt).c_str(), getETA(k, nIters, secsPerIt).c_str());
   return buf;
@@ -2364,7 +2365,7 @@ void Gpu::doBigLog(u64 k, u64 res, bool checkOK, float secsPerIt, u64 nIters, u3
     log("%sZ=%.0f (avg %.1f), ROEmax=%.3f, ROEavg=%.3f. %s\n", makeLogStr(checkOK ? "OK" : "EE", k, res, secsPerIt, nIters).c_str(),
         z, zAvg.avg(), roeSq.max, roeSq.mean, (nErrors ? " "s + to_string(nErrors) + " errors"s : ""s).c_str());
   else
-    log("%sZ=%.0f (avg %.1f) %s\n", makeLogStr(checkOK ? "OK" : "EE", k, res, secsPerIt, nIters).c_str(),
+    log(_("%sZ=%.0f (avg %.1f) %s\n"), makeLogStr(checkOK ? "OK" : "EE", k, res, secsPerIt, nIters).c_str(),
         z, zAvg.avg(), (nErrors ? " "s + to_string(nErrors) + " errors"s : ""s).c_str());
 
   if (roeSq.N > 2 && (z < 6 || (fft.shape.fft_type == FFT64 && z < 20))) {
@@ -2511,10 +2512,10 @@ fs::path Gpu::saveProof(const Args& args, ProofSet& proofSet) {
         fs::path proofFile = proof.file(args.proofResultDir);
 
         bool const ok = Proof::load(tmpFile).verify(this, hashes);
-        log("Proof '%s' verification %s\n", tmpFile.string().c_str(), ok ? "OK" : "FAILED");
+        log(_("Proof '%s' verification %s\n"), tmpFile.string().c_str(), ok ? "OK" : "FAILED");
         if (ok) {
           fancyRename(tmpFile, proofFile);
-          log("Proof '%s' generated\n", proofFile.string().c_str());
+          log(_("Proof '%s' generated\n"), proofFile.string().c_str());
           return proofFile;
         }
       } catch (const CRCError&) {
@@ -2549,7 +2550,7 @@ PRPState Gpu::loadPRP(Saver<PRPState>& saver) {
     u64 const res = dataResidue();
 
     if (res == state.res64) {
-      log("OK %9" PRIu64 " on-load: blockSize %d, %016" PRIx64 "\n", state.k, state.blockSize, res);
+      log(_("%s %9" PRIu64 " on-load: blockSize %d, %016" PRIx64 "\n"), "OK", state.k, state.blockSize, res);
       return state;
       // return {loaded.k, loaded.blockSize, loaded.nErrors};
     }
@@ -2572,7 +2573,7 @@ u32 Gpu::getProofPower(u64 k) {
   if (!power) {
     log("Proof generation disabled!\n");
   } else {
-    log("Proof of power %u requires about %.1fGB of disk space\n", power, ProofSet::diskUsageGB(E, power));
+    log(_("Proof of power %u requires about %.1fGB of disk space\n"), power, ProofSet::diskUsageGB(E, power));
   }
   return power;
 }
@@ -2881,7 +2882,7 @@ PRPResult Gpu::isPrimePRP([[maybe_unused]] const Task& task) {
     bool const doLog = k % logStep == 0;
     enum LEAD_TYPE const leadOut = doCheck || doLog || k == persistK || k == kEnd || useLongCarry ? LEAD_NONE : LEAD_WIDTH;
 
-    if (doStop) { log("Stopping, please wait..\n"); }
+    if (doStop) { log(_("Stopping, please wait..\n")); }
 
     square(bufData, bufData, leadIn, leadOut, false);
     leadIn = leadOut;
@@ -3046,7 +3047,7 @@ LLResult Gpu::isPrimeLL([[maybe_unused]] const Task& task) {
 
     if (Signal::stopRequested()) {
       doStop = true;
-      log("Stopping, please wait..\n");
+      log(_("Stopping, please wait..\n"));
     }
 
     bool const doLog = (k % args.logStep == 0) || doStop;
@@ -3134,7 +3135,7 @@ array<u64, 4> Gpu::isCERT(const Task& task) {
 
     if (Signal::stopRequested()) {
       doStop = true;
-      log("Stopping, please wait..\n");
+      log(_("Stopping, please wait..\n"));
     }
 
     bool const doLog = (k % args.logStep == 0) || doStop;   // same cadence as LL; every log point is also a checkpoint

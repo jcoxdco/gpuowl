@@ -20,6 +20,7 @@ add_executable(prpll
   tune.cpp
   TuneEntry.cpp
   fs.cpp
+  i18n.cpp
   )
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -38,6 +39,53 @@ else()
 endif()
 
 target_include_directories(prpll PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+# Translation of the help and the status messages (see po/).  MSVC builds load libintl at run time, so they need
+# nothing at build time; elsewhere libintl is linked (it is part of glibc).  Without it the build is English-only.
+set(PRPLL_LOCALEDIR "/usr/share/locale" CACHE STRING
+    "Where the message catalogs are looked for when there is no locale directory next to the executable")
+if (MSVC)
+  target_compile_definitions(prpll PRIVATE PRPLL_NLS=1)
+else()
+  find_package(Intl)
+  if (Intl_FOUND)
+    target_compile_definitions(prpll PRIVATE PRPLL_NLS=1 "PRPLL_LOCALEDIR=\"${PRPLL_LOCALEDIR}\"")
+    target_include_directories(prpll PRIVATE ${Intl_INCLUDE_DIRS})
+    target_link_libraries(prpll ${Intl_LIBRARIES})
+  else()
+    message(STATUS "libintl not found: building without translations (English only)")
+  endif()
+endif()
+
+# "pot" and "locale" targets, as in the Makefile, when the gettext tools are installed.  "locale" puts the
+# compiled catalogs in a locale directory next to the executable, where PRPLL looks for them first.
+find_package(Gettext QUIET)
+find_program(PRPLL_XGETTEXT xgettext)
+file(GLOB PO_FILES ${CMAKE_SOURCE_DIR}/po/*.po)
+if (GETTEXT_FOUND)
+  set(LOCALE_COMMANDS)
+  foreach(po ${PO_FILES})
+    get_filename_component(lang ${po} NAME_WE)
+    list(APPEND LOCALE_COMMANDS
+      COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:prpll>/locale/${lang}/LC_MESSAGES
+      COMMAND ${GETTEXT_MSGFMT_EXECUTABLE} --check -o $<TARGET_FILE_DIR:prpll>/locale/${lang}/LC_MESSAGES/prpll.mo ${po})
+  endforeach()
+  add_custom_target(locale ${LOCALE_COMMANDS} VERBATIM)
+endif()
+if (GETTEXT_FOUND AND PRPLL_XGETTEXT)
+  file(GLOB I18N_SOURCES RELATIVE ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
+  list(REMOVE_ITEM I18N_SOURCES src/bundle.cpp)
+  set(POT_COMMANDS)
+  foreach(po ${PO_FILES})
+    list(APPEND POT_COMMANDS COMMAND ${GETTEXT_MSGMERGE_EXECUTABLE} --quiet --update --backup=none ${po} po/prpll.pot)
+  endforeach()
+  add_custom_target(pot
+    COMMAND ${PRPLL_XGETTEXT} -C --from-code=UTF-8 --keyword=_ --flag=_:1:c-format --package-name=PRPLL
+            --msgid-bugs-address=https://github.com/gwoltman/gpuowl/issues -o po/prpll.pot ${I18N_SOURCES}
+    ${POT_COMMANDS}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    VERBATIM)
+endif()
 
 # Regenerated on every build (a commit changes the version without touching any source file) by version.cmake,
 # which only rewrites version.inc when the string changes.  -DPRPLL_VERSION=... sets it, as make VERSION=... does.

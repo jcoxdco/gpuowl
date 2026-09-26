@@ -15,6 +15,7 @@
 #include "GpuCommon.h"
 #include "Gpu.h"
 #include "tune.h"
+#include "i18n.h"
 
 #include <atomic>
 #include <cerrno>
@@ -39,7 +40,7 @@ static void gpuWorker(GpuCommon shared, i32 instance) {
   // log("Starting worker %d\n", instance);
   if (instance > 0) {
     initLog(("gpuowl-"s + to_string(instance) + ".log").c_str());
-    log("PRPLL %s, instance %d\n", VERSION, instance);
+    log(_("PRPLL %s, instance %d\n"), VERSION, instance);
   }
 
   try {
@@ -74,6 +75,8 @@ int main(int argc, char **argv) {
 #ifdef _MSC_VER
   _set_printf_count_output(1);    // I'm not sure what this does (it's from CrazeTheDragon)
 #endif
+
+  initI18n(argc, argv);
 
 #ifdef __MSYS__
   // I was unable to get putenv to link in MSYS2
@@ -158,7 +161,7 @@ int main(int argc, char **argv) {
 #endif
 
     initLog("gpuowl-0.log");
-    log("PRPLL %s starting\n", VERSION);
+    log(_("PRPLL %s starting\n"), VERSION);
 #if !defined(CUDA_BACKEND) && !defined(_WIN32)
     if (!reexecError.empty()) {
       log("Warning: could not re-exec for -v 10 assembly dump (%s), continuing without it\n", reexecError.c_str());
@@ -225,6 +228,6 @@ int main(int argc, char **argv) {
 
   if (workerFailed && exitCode == 0) { exitCode = 1; }
 
-  log("Bye\n");
+  log(_("Bye\n"));
   return exitCode;
 }

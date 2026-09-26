@@ -6,6 +6,7 @@
 #include "gpuid.h"
 #include "Proof.h"
 #include "version.h"
+#include "i18n.h"
 
 #include <vector>
 #include <string>
@@ -121,10 +122,12 @@ static void checkTuneOptions(const string& options) {
 void Args::readConfig(const fs::path& path) {
   if (File file = File::openRead(path)) {
     file.allowUnterminatedLastLine();
+    fromConfig = true;
     for (string line : file) {
       line = rstripNewline(line);
       parse(line);
     }
+    fromConfig = false;
   }
 }
 
@@ -138,132 +141,135 @@ string Args::tailDir() const { return fs::path{dir}.filename().string(); }
 
 bool Args::hasFlag(const string& key) const { return flags.contains(key); }
 
+// One message per paragraph and per option (with its continuation lines), so that changing one option
+// leaves the translations of all the others in use.
 void Args::printHelp() {
-  printf(R"(
-PRPLL is "PRobable Prime and Lucas-Lehmer Categorizer", AKA "Purple-cat"
+  printf("\n");
+  printf(_("PRPLL is \"PRobable Prime and Lucas-Lehmer Categorizer\", AKA \"Purple-cat\"\n"));
+  printf("\n");
+  printf(_("PRPLL is an OpenCL/CUDA (GPU) program for primality testing Mersenne numbers (of the form 2^n - 1).\n"));
+  printf("\n");
+  printf(_("To check that OpenCL is installed correctly use the command \"clinfo\". If clinfo does not find any\n"
+           "devices or otherwise fails, this program will not run.\n"));
+  printf("\n");
+  printf(_("This program is tested on Linux/ROCm (AMD GPUs); it also runs on Windows and on Nvidia GPUs.\n"));
+  printf("\n");
+  printf(_("For information about Mersenne primes search see https://www.mersenne.org/\n"));
+  printf("\n");
+  printf(_("Run \"prpll -h\"; If this displays a list of OpenCL devices, it means that PRPLL is detecting the GPUs\n"
+           "and should be able to run.\n"));
+  printf("\n\n");
+  printf(_("Worktodo:\n"
+           "PRPLL keeps the active tasks in per-worker files worktodo-0.txt, worktodo-1.txt etc in the local directory.\n"
+           "These per-worker files are supplied from the global worktodo.txt file if -pool is used.\n"
+           "In turn the work files can be supplied through AutoPrimeNet, located at https://download.mersenne.ca/AutoPrimeNet\n"));
+  printf("\n");
+  printf(_("It is also possible to manually add exponents by adding lines of the form \"PRP=118063003\" to worktodo-<N>.txt\n"));
+  printf("\n\n");
+  printf(_("The configuration options listed below can be passed on the command line or can be put in a file\n"
+           "named \"config.txt\" in the prpll run directory.\n"));
+  printf("\n\n");
 
-PRPLL is an OpenCL/CUDA (GPU) program for primality testing Mersenne numbers (of the form 2^n - 1).
-
-To check that OpenCL is installed correctly use the command "clinfo". If clinfo does not find any
-devices or otherwise fails, this program will not run.
-
-This program is tested on Linux/ROCm (AMD GPUs); it also runs on Windows and on Nvidia GPUs.
-
-For information about Mersenne primes search see https://www.mersenne.org/
-
-Run "prpll -h"; If this displays a list of OpenCL devices, it means that PRPLL is detecting the GPUs
-and should be able to run.
-
-
-Worktodo:
-PRPLL keeps the active tasks in per-worker files worktodo-0.txt, worktodo-1.txt etc in the local directory.
-These per-worker files are supplied from the global worktodo.txt file if -pool is used.
-In turn the work files can be supplied through AutoPrimeNet, located at https://download.mersenne.ca/AutoPrimeNet
-
-It is also possible to manually add exponents by adding lines of the form "PRP=118063003" to worktodo-<N>.txt
-
-
-The configuration options listed below can be passed on the command line or can be put in a file
-named "config.txt" in the prpll run directory.
-
-
--h                 : print general help, list of FFTs, list of devices
--info <fft>        : print detailed information about the given FFT; e.g. -info 1K:13:256
--dir <folder>      : specify local work directory (containing worktodo-<N>.txt, results-<N>.txt, config.txt,
-                     gpuowl-<N>.log)
--pool <dir>        : specify a directory with the shared (pooled) worktodo.txt and config.txt
-                     Multiple PRPLL instances, each in its own directory, can share a pool of assignments.
-                     Results are still written locally, to results-<N>.txt in each instance's own directory.
--verbose           : print more log, useful for developers
--version           : print only the version and exit
--user <name>       : specify the mersenne.org user name (for result reporting)
--workers <N>       : specify the number of parallel PRP tests to run (default 1)
-
--fft <spec>        : specify FFT or FFTs to use:
-                     - a specific configuration: 256:13:1K
-                     - a FFT size: 6.5M
-                     - a size range: 7M-8M
-                     - a list: 256:13:1K,8M
-                     See the list of FFTs at the end.
-
--od <value>        : Overdrive the FFT range (ROE, CARRY32 limits). This allows to use a lower FFT for a given
-                     exponent (thus faster), but increases the risk of errors. The presence of errors is detected,
-                     but the errors are nevertheless costly computationally and better avoided.
-                     A <value> of 1 extends the range by 0.1%% (and this would be acceptable); a value of 10
-                     extends the range by 1%% (and this would be quite too much WRT errors).
-
--block <value>     : PRP block size, one of: 1000, 500, 200. Default 1000.
--carry long|short  : force carry type. Short carry may be faster, but requires high bits/word.
--prp <exponent>    : run a single PRP test and exit, ignoring worktodo.txt
--ll <exponent>     : run a single LL test and exit, ignoring worktodo.txt
--verify <file>     : verify PRP-proof contained in <file>
--smallest          : work on smallest exponent in worktodo.txt rather than the first exponent in worktodo.txt    
--proof <power>     : generate proof of power <power> (default: optimal depending on exponent).
-                     A lower power reduces disk space requirements but increases the verification cost.
-                     A higher power increases disk usage a lot.
-                     e.g. proof power 10 for a 120M exponent uses about %.0fGB of disk space.
-                     -proof 0 disables proof generation: the PRP result is reported without a proof.
--iters <N>         : run next PRP test for <N> iterations and exit.
--save <N>          : specify the number of savefiles to keep (default %u).
--noclean           : do not delete data after the test is complete.
--cache             : use binary kernel cache; useful with repeated use of -roeTune and -tune
--roe               : measure the Round-Off Error (Z) for more iterations (slow)
--time              : collect and print a per-kernel GPU timing profile
--log <N>           : log progress and checkpoint every <N> iterations (positive multiple of 1000; default 20000)
-
--use <define>      : comma separated list of defines for configuring openCL code, such as:
-  -use FAST_BARRIER: on AMD Radeon VII and older AMD GPUs, use a faster barrier().  This option
-                     may not work on Nvidia GPUs.  It is ignored on RDNA and on MI200 and later
-                     AMD GPUs, where the faster barrier gives wrong results.
-  -use NO_ASM      : do not use __asm() blocks (inline assembly); also accepted as NOASM
-  -use TAIL_KERNELS=<val> : change how tailSquare and tailMul operate according to <val>:
-                     0 = single wide, single kernel
-                     1 = single wide, two kernels
-                     2 = double wide, single kernel
-                     3 = double wide, two kernels
-  -use TAIL_TRIGS=<val> : change how tailSquare computes final trig values according to <val>:
-                     2 = calculate from scratch, no memory read
-                     1 = calculate using one complex multiply from cached memory and uncached memory
-                     0 = read trig values from memory
-  -use INPLACE=n   : Perform tranforms in-place.  Great if the reduced memory usage fits in the GPU's L2 cache.
-                     0 = not in-place, 1 = nVidia friendly access pattern, 2 = AMD friendly access pattern.
-  -use PAD=<val>   : insert pad bytes to possibly improve memory access patterns.  Val is number bytes to pad.
-  -use MIDDLE_IN_LDS_TRANSPOSE=0|1  : Transpose values in local memory before writing to global memory
-  -use MIDDLE_OUT_LDS_TRANSPOSE=0|1 : Transpose values in local memory before writing to global memory
-  -use TABMUL_CHAIN=<val>: Controls how trig values are obtained in WIDTH and HEIGHT when FFT-spec is 1.
-                     0 = Read one trig value and compute the next 3 or 7.
-                     1 = All trig values are pre-computed and read from memmory.
-
-  -use DEBUG       : enable asserts in OpenCL kernels (slow, developers)
-  -use STATS=<val> : enable carry statistics collection & logging (developers), for the kernel according to <val>:
-                     1 = CarryFused, 2 = CarryFusedMul, 4 = CarryA, 8 = CarryMul
-
--tune <options>    : Looks for best settings to include in config.txt.  Times many FFTs to find fastest one to test exponents -- written to tune.txt.
-                     An -fft <spec> can be given on the command line to limit which FFTs are timed.
-                     Options are not required.  If present, the options are a comma separated list from below.
-                         noconfig     - Skip timings to find best config.txt settings.
-                         inplace      - Skip timings for not-in-place FFTs and NTTs.  All nVidia GPUs seem to prefer in-place FFTs and NTTs.
-                         fp64         - Tune for settings that affect FP64 FFTs.  Time FP64 FFTs for tune.txt.
-                         ntt          - Tune for settings that affect integer NTTs.  Time integer NTTs for tune.txt.
-                         nofp32       - Do not tune for settings that affect FP32 FFTs.  Some openCL compilers have trouble with FP32.
-                         minexp=<val> - Time FFTs to find the best one for exponents greater than <val>.  Default 75000000.
-                         maxexp=<val> - Time FFTs to find the best one for exponents less than <val>.  Default 350000000.
-                                        Without an -fft <spec>, only FFTs in [minexp, maxexp] are timed, so tuning
-                                        for a small exponent (e.g. PRP-CF at 18M) needs both ends set low, e.g.
-                                        -tune minexp=10000000,maxexp=20000000
-                         fp6431       - Time FP64+M31 FFTs for tune.txt.  Only GPUs with great FP64 performance will find this beneficial.
-                         quick=<val>  - Use higher values for a quicker, potentially less accurate tune.  Val ranges from 1 to 10.
--device <N>        : select the GPU at position N in the list of devices
--uid    <UID>      : select the GPU with the given UID (on ROCm/AMDGPU, Linux)
--pci    <BDF>      : select the GPU with the given PCI BDF, e.g. "0c:00.0"
-
-Device selection : use one of -uid <UID>, -pci <BDF>, -device <N>, see the list below
-
-)", ProofSet::diskUsageGB(120000000, 10), nSavefiles);
+  printf(_("-h                 : print general help, list of FFTs, list of devices\n"));
+  printf(_("-info <fft>        : print detailed information about the given FFT; e.g. -info 1K:13:256\n"));
+  printf(_("-dir <folder>      : specify local work directory (containing worktodo-<N>.txt, results-<N>.txt, config.txt,\n"
+           "                     gpuowl-<N>.log)\n"));
+  printf(_("-pool <dir>        : specify a directory with the shared (pooled) worktodo.txt and config.txt\n"
+           "                     Multiple PRPLL instances, each in its own directory, can share a pool of assignments.\n"
+           "                     Results are still written locally, to results-<N>.txt in each instance's own directory.\n"));
+  printf(_("-verbose           : print more log, useful for developers\n"));
+  printf(_("-version           : print only the version and exit\n"));
+  printf(_("-lang <tag>        : language for the help and for translated status messages, e.g. es or es_ES; en or C for English.\n"
+           "                     Messages without a translation stay in English.  Only read from the command line.\n"
+           "                     Default: the system language.\n"));
+  printf(_("-user <name>       : specify the mersenne.org user name (for result reporting)\n"));
+  printf(_("-workers <N>       : specify the number of parallel PRP tests to run (default 1)\n"));
+  printf("\n");
+  printf(_("-fft <spec>        : specify FFT or FFTs to use:\n"
+           "                     - a specific configuration: 256:13:1K\n"
+           "                     - a FFT size: 6.5M\n"
+           "                     - a size range: 7M-8M\n"
+           "                     - a list: 256:13:1K,8M\n"
+           "                     See the list of FFTs at the end.\n"));
+  printf("\n");
+  printf(_("-od <value>        : Overdrive the FFT range (ROE, CARRY32 limits). This allows to use a lower FFT for a given\n"
+           "                     exponent (thus faster), but increases the risk of errors. The presence of errors is detected,\n"
+           "                     but the errors are nevertheless costly computationally and better avoided.\n"
+           "                     A <value> of 1 extends the range by 0.1%% (and this would be acceptable); a value of 10\n"
+           "                     extends the range by 1%% (and this would be quite too much WRT errors).\n"));
+  printf("\n");
+  printf(_("-block <value>     : PRP block size, one of: 1000, 500, 200. Default 1000.\n"));
+  printf(_("-carry long|short  : force carry type. Short carry may be faster, but requires high bits/word.\n"));
+  printf(_("-prp <exponent>    : run a single PRP test and exit, ignoring worktodo.txt\n"));
+  printf(_("-ll <exponent>     : run a single LL test and exit, ignoring worktodo.txt\n"));
+  printf(_("-verify <file>     : verify PRP-proof contained in <file>\n"));
+  printf(_("-smallest          : work on smallest exponent in worktodo.txt rather than the first exponent in worktodo.txt\n"));
+  printf(_("-proof <power>     : generate proof of power <power> (default: optimal depending on exponent).\n"
+           "                     A lower power reduces disk space requirements but increases the verification cost.\n"
+           "                     A higher power increases disk usage a lot.\n"
+           "                     e.g. proof power 10 for a 120M exponent uses about %.0fGB of disk space.\n"
+           "                     -proof 0 disables proof generation: the PRP result is reported without a proof.\n"),
+         ProofSet::diskUsageGB(120000000, 10));
+  printf(_("-iters <N>         : run next PRP test for <N> iterations and exit.\n"));
+  printf(_("-save <N>          : specify the number of savefiles to keep (default %u).\n"), nSavefiles);
+  printf(_("-noclean           : do not delete data after the test is complete.\n"));
+  printf(_("-cache             : use binary kernel cache; useful with repeated use of -roeTune and -tune\n"));
+  printf(_("-roe               : measure the Round-Off Error (Z) for more iterations (slow)\n"));
+  printf(_("-time              : collect and print a per-kernel GPU timing profile\n"));
+  printf(_("-log <N>           : log progress and checkpoint every <N> iterations (positive multiple of 1000; default 20000)\n"));
+  printf("\n");
+  printf(_("-use <define>      : comma separated list of defines for configuring openCL code, such as:\n"));
+  printf(_("  -use FAST_BARRIER: on AMD Radeon VII and older AMD GPUs, use a faster barrier().  This option\n"
+           "                     may not work on Nvidia GPUs.  It is ignored on RDNA and on MI200 and later\n"
+           "                     AMD GPUs, where the faster barrier gives wrong results.\n"));
+  printf(_("  -use NO_ASM      : do not use __asm() blocks (inline assembly); also accepted as NOASM\n"));
+  printf(_("  -use TAIL_KERNELS=<val> : change how tailSquare and tailMul operate according to <val>:\n"
+           "                     0 = single wide, single kernel\n"
+           "                     1 = single wide, two kernels\n"
+           "                     2 = double wide, single kernel\n"
+           "                     3 = double wide, two kernels\n"));
+  printf(_("  -use TAIL_TRIGS=<val> : change how tailSquare computes final trig values according to <val>:\n"
+           "                     2 = calculate from scratch, no memory read\n"
+           "                     1 = calculate using one complex multiply from cached memory and uncached memory\n"
+           "                     0 = read trig values from memory\n"));
+  printf(_("  -use INPLACE=n   : Perform tranforms in-place.  Great if the reduced memory usage fits in the GPU's L2 cache.\n"
+           "                     0 = not in-place, 1 = nVidia friendly access pattern, 2 = AMD friendly access pattern.\n"));
+  printf(_("  -use PAD=<val>   : insert pad bytes to possibly improve memory access patterns.  Val is number bytes to pad.\n"));
+  printf(_("  -use MIDDLE_IN_LDS_TRANSPOSE=0|1  : Transpose values in local memory before writing to global memory\n"));
+  printf(_("  -use MIDDLE_OUT_LDS_TRANSPOSE=0|1 : Transpose values in local memory before writing to global memory\n"));
+  printf(_("  -use TABMUL_CHAIN=<val>: Controls how trig values are obtained in WIDTH and HEIGHT when FFT-spec is 1.\n"
+           "                     0 = Read one trig value and compute the next 3 or 7.\n"
+           "                     1 = All trig values are pre-computed and read from memmory.\n"));
+  printf("\n");
+  printf(_("  -use DEBUG       : enable asserts in OpenCL kernels (slow, developers)\n"));
+  printf(_("  -use STATS=<val> : enable carry statistics collection & logging (developers), for the kernel according to <val>:\n"
+           "                     1 = CarryFused, 2 = CarryFusedMul, 4 = CarryA, 8 = CarryMul\n"));
+  printf("\n");
+  printf(_("-tune <options>    : Looks for best settings to include in config.txt.  Times many FFTs to find fastest one to test exponents -- written to tune.txt.\n"
+           "                     An -fft <spec> can be given on the command line to limit which FFTs are timed.\n"
+           "                     Options are not required.  If present, the options are a comma separated list from below.\n"));
+  printf(_("                         noconfig     - Skip timings to find best config.txt settings.\n"));
+  printf(_("                         inplace      - Skip timings for not-in-place FFTs and NTTs.  All nVidia GPUs seem to prefer in-place FFTs and NTTs.\n"));
+  printf(_("                         fp64         - Tune for settings that affect FP64 FFTs.  Time FP64 FFTs for tune.txt.\n"));
+  printf(_("                         ntt          - Tune for settings that affect integer NTTs.  Time integer NTTs for tune.txt.\n"));
+  printf(_("                         nofp32       - Do not tune for settings that affect FP32 FFTs.  Some openCL compilers have trouble with FP32.\n"));
+  printf(_("                         minexp=<val> - Time FFTs to find the best one for exponents greater than <val>.  Default 75000000.\n"));
+  printf(_("                         maxexp=<val> - Time FFTs to find the best one for exponents less than <val>.  Default 350000000.\n"
+           "                                        Without an -fft <spec>, only FFTs in [minexp, maxexp] are timed, so tuning\n"
+           "                                        for a small exponent (e.g. PRP-CF at 18M) needs both ends set low, e.g.\n"
+           "                                        -tune minexp=10000000,maxexp=20000000\n"));
+  printf(_("                         fp6431       - Time FP64+M31 FFTs for tune.txt.  Only GPUs with great FP64 performance will find this beneficial.\n"));
+  printf(_("                         quick=<val>  - Use higher values for a quicker, potentially less accurate tune.  Val ranges from 1 to 10.\n"));
+  printf(_("-device <N>        : select the GPU at position N in the list of devices\n"));
+  printf(_("-uid    <UID>      : select the GPU with the given UID (on ROCm/AMDGPU, Linux)\n"));
+  printf(_("-pci    <BDF>      : select the GPU with the given PCI BDF, e.g. \"0c:00.0\"\n"));
+  printf("\n");
+  printf(_("Device selection : use one of -uid <UID>, -pci <BDF>, -device <N>, see the list below\n"));
+  printf("\n");
 
   vector<cl_device_id> deviceIds = getAllDeviceIDs();
   if (!deviceIds.empty()) {
-    printf(" N  : PCI BDF |   UID            |   Driver                 |    Device\n");
+    printf(_(" N  : PCI BDF |   UID            |   Driver                 |    Device\n"));
   }
   for (unsigned i = 0; i < deviceIds.size(); ++i) {
     cl_device_id id = deviceIds[i];
@@ -278,13 +284,15 @@ Device selection : use one of -uid <UID>, -pci <BDF>, -device <N>, see the list 
            );
 
   }
-  printf("\nFFT Configurations (specify with -fft <type>:<width>:<middle>:<height> from the set below):\n");
+  printf("\n");
+  printf(_("FFT Configurations (specify with -fft <type>:<width>:<middle>:<height> from the set below):\n"));
 
   vector<FFTShape> const configs = FFTShape::allShapes();
   for (auto [type, name] : {pair{FFT64, "FP64"}, {FFT3161, "M31+M61 NTT"}, {FFT3261, "FP32+M61"}, {FFT61, "M61 NTT"},
                             {FFT323161, "FP32+M31+M61"}, {FFT6431, "FP64+M31"}}) {
-    printf("\nFFT type %d: %s\n"
-           " Size   MaxExp   BPW    FFT\n", type, name);
+    printf("\n");
+    printf(_("FFT type %d: %s\n"), type, name);
+    printf(_(" Size   MaxExp   BPW    FFT\n"));
     u32 activeSize = 0;
     float maxBpw = 0;
     string variants;
@@ -330,7 +338,7 @@ void Args::parse(const string& line) {
     return;
   }
 
-  if (!silent) { log("config: %s\n", line.c_str()); }
+  if (!silent) { log(_("config: %s\n"), line.c_str()); }
 
   auto args = splitArgLine(line);
 
@@ -531,6 +539,14 @@ void Args::parse(const string& line) {
         throw "invalid -save value";
       }
       nSavefiles = n;
+    } else if (key == "-lang") {
+      // The language is chosen by initI18n() from the command line before anything is printed;
+      // by the time config.txt is read the catalog is loaded and messages already translated.
+      static bool noted = false;
+      if (fromConfig && !silent && !noted) {
+        noted = true;
+        log("-lang in config.txt is ignored; give it on the command line\n");
+      }
     } else {
       log("Argument '%s' '%s' not understood\n", key.c_str(), s.c_str());
       throw "args";

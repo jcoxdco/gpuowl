@@ -9,6 +9,7 @@
 #include "fs.h"
 #include "Primes.h"
 #include "FFTConfig.h"
+#include "i18n.h"
 
 #include <cassert>
 #include <string>
@@ -174,7 +175,7 @@ optional<Task> getWork(Args& args, i32 instance) {
     if (fs::exists("worktodo.txt")) {
       log("No work to do found.  Add work to %s.  Found worktodo.txt; PRPLL reads %s (rename it).\n", filename.c_str(), filename.c_str());
     } else {
-      log("No work to do found.  Add work to %s.\n", filename.c_str());
+      log(_("No work to do found.  Add work to %s.\n"), filename.c_str());
     }
     return {};
   }

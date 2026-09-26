@@ -31,6 +31,7 @@
     <ClCompile Include=".\src\fs.cpp" />
     <ClCompile Include=".\src\Gpu.cpp" />
     <ClCompile Include=".\src\gpuid.cpp" />
+    <ClCompile Include=".\src\i18n.cpp" />
     <ClCompile Include=".\src\Kernel.cpp" />
     <ClCompile Include=".\src\KernelCompiler.cpp" />
     <ClCompile Include=".\src\log.cpp" />
@@ -117,7 +118,7 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>WIN32;WIN64;_CONSOLE;_CRT_SECURE_NO_WARNINGS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;WIN64;_CONSOLE;_CRT_SECURE_NO_WARNINGS;NOMINMAX;PRPLL_NLS=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExceptionHandling>Sync</ExceptionHandling>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>

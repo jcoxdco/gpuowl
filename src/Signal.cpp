@@ -2,6 +2,7 @@
 
 #include "Signal.h"
 #include "log.h"
+#include "i18n.h"
 
 #include <csignal>
 #include <filesystem>
@@ -28,7 +29,7 @@ static bool stopFileSeen() {
   error_code ec;
   if (!filesystem::exists(STOP_FILE, ec) || ec) { return false; }
   filesystem::remove(STOP_FILE, ec);
-  log("Stop requested by the '%s' file\n", STOP_FILE);
+  log(_("Stop requested by the '%s' file\n"), STOP_FILE);
   return true;
 }
 
