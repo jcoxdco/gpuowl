@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PRPLL\n"
 "Report-Msgid-Bugs-To: https://github.com/gwoltman/gpuowl/issues\n"
-"POT-Creation-Date: 2026-09-26 13:04-0600\n"
+"POT-Creation-Date: 2026-09-26 13:10-0600\n"
 "PO-Revision-Date: 2026-09-26 12:39-0600\n"
 "Last-Translator: machine translation, unreviewed\n"
 "Language-Team: Spanish\n"
@@ -739,17 +739,27 @@ msgstr ""
 msgid "Stopping, please wait..\n"
 msgstr "Deteniendo, por favor espere..\n"
 
-#: src/main.cpp:43
+#: src/main.cpp:44
 #, c-format
 msgid "PRPLL %s, instance %d\n"
 msgstr "PRPLL %s, instancia %d\n"
 
-#: src/main.cpp:164
+#: src/main.cpp:77
+#, c-format
+msgid "Exception \"stop requested\"\n"
+msgstr "Excepción \"se solicitó la detención\"\n"
+
+#: src/main.cpp:85
+#, c-format
+msgid "Exiting because \"stop requested\"\n"
+msgstr "Saliendo porque \"se solicitó la detención\"\n"
+
+#: src/main.cpp:182
 #, c-format
 msgid "PRPLL %s starting\n"
 msgstr "PRPLL %s iniciando\n"
 
-#: src/main.cpp:231
+#: src/main.cpp:249
 #, c-format
 msgid "Bye\n"
 msgstr "Adiós\n"

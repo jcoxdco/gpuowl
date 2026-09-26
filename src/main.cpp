@@ -34,6 +34,7 @@
 static std::atomic<bool> workerFailed{false};
 
 static bool isCleanExit(const char* reason);
+static void logWorkerException(const char *mes);
 
 static void gpuWorker(GpuCommon shared, i32 instance) {
   // LogContext context{(instance ? shared.args->tailDir() : ""s) + to_string(instance) + ' '};
@@ -46,10 +47,10 @@ static void gpuWorker(GpuCommon shared, i32 instance) {
   try {
     while (auto task = Worktodo::getTask(*shared.args, instance)) { task->execute(shared, instance); }
   } catch (const char *mes) {
-    log("Exception \"%s\"\n", mes);
+    logWorkerException(mes);
     if (!isCleanExit(mes)) { workerFailed = true; }
   } catch (const string& mes) {
-    log("Exception \"%s\"\n", mes.c_str());
+    logWorkerException(mes.c_str());
     if (!isCleanExit(mes.c_str())) { workerFailed = true; }
   } catch (const std::exception& e) {
     log("Exception %s: %s\n", typeName(e), e.what());
@@ -64,10 +65,27 @@ extern int putenv(char *);
 
 // The exceptions that end a run on purpose: the user's stop, and the
 // flags that only print (-h, -info, -version). Everything else thrown
-// to main() is a failure.
+// to main() is a failure. "stop requested" stays the token compared here;
+// only the line printed for it is translated.
 static bool isCleanExit(const char *reason) {
   return !strcmp(reason, "stop requested") || !strcmp(reason, "help")
       || !strcmp(reason, "info") || !strcmp(reason, "version");
+}
+
+static void logWorkerException(const char *mes) {
+  if (!strcmp(mes, "stop requested")) {
+    log(_("Exception \"stop requested\"\n"));
+  } else {
+    log("Exception \"%s\"\n", mes);
+  }
+}
+
+static void logExitBecause(const char *mes) {
+  if (!strcmp(mes, "stop requested")) {
+    log(_("Exiting because \"stop requested\"\n"));
+  } else {
+    log("Exiting because \"%s\"\n", mes);
+  }
 }
 
 int main(int argc, char **argv) {
@@ -216,10 +234,10 @@ int main(int argc, char **argv) {
     // otherwise follow, so a launcher capturing the output sees only the
     // version.
     if (!strcmp(mes, "version")) { return 0; }
-    log("Exiting because \"%s\"\n", mes);
+    logExitBecause(mes);
     exitCode = isCleanExit(mes) ? 0 : 1;
   } catch (const string& mes) {
-    log("Exiting because \"%s\"\n", mes.c_str());
+    logExitBecause(mes.c_str());
     exitCode = isCleanExit(mes.c_str()) ? 0 : 1;
   } catch (const std::exception& e) {
     log("Exiting because of exception %s: %s\n", typeName(e), e.what());
