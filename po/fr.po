@@ -620,12 +620,6 @@ msgid "config: %s\n"
 msgstr ""
 "configuration : %s\n"
 
-#: src/clwrap.cpp:317
-#, c-format
-msgid "This OpenCL compiler does not accept __asm().  Using NO_ASM.\n"
-msgstr ""
-"Ce compilateur OpenCL n'accepte pas __asm().  Utilisation de NO_ASM.\n"
-
 #: src/Gpu.cpp:2360
 #, c-format
 msgid "%2s %9<PRIu64> %016<PRIx64> %s ETA %s; "
