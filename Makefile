@@ -16,6 +16,9 @@ STATIC_CUDA = 0
 # make all DEBUG=1 CXX=g++-12
 
 HOST_OS = $(shell uname -s)
+# MSYS make reports MSYS_NT. MinGW libintl still has to be linked there; the PE subsystem
+# flags stay on the MINGW uname only.
+HOST_WIN = $(findstring MINGW,$(HOST_OS))$(findstring MSYS,$(HOST_OS))
 
 CXX ?= g++
 
@@ -71,7 +74,7 @@ LOCALEDIR ?= /usr/share/locale
 
 ifeq ($(NLS), 1)
  CPPFLAGS += -DPRPLL_NLS=1 -DPRPLL_LOCALEDIR='"$(LOCALEDIR)"'
- ifeq ($(findstring MINGW, $(HOST_OS)), MINGW)
+ ifneq ($(HOST_WIN),)
   NLS_LIBS = -lintl -liconv
  endif
 endif
