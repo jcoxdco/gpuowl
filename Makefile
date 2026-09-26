@@ -56,7 +56,9 @@ endif
 
 ifneq ($(HOST_WIN),)
  CPPFLAGS += -DWINVER=0x0601 -D_WIN32_WINNT=0x0601
- LDFLAGS += -Wl,--subsystem,console:6.01
+ # Windows 7 subsystem version.  console:6.01 is one ld argument, but ':' is special
+ # to the g++ driver, so only the clang/lld CI link accepted it.  Split it.
+ LDFLAGS += -Wl,--subsystem,console -Wl,--major-subsystem-version,6 -Wl,--minor-subsystem-version,1
 endif
 
 # NLS=1 translates the help and the status messages through GNU gettext (catalogs in po/, see "make locale");
@@ -66,7 +68,10 @@ endif
 ifeq ($(HOST_OS), Darwin)
  NLS ?= 0
 else ifneq ($(HOST_WIN),)
- NLS ?= $(if $(shell $(CXX) $(CPPFLAGS) -include libintl.h -fsyntax-only -x c++ /dev/null 2>/dev/null && echo 1),1,0)
+ # MinGW g++ is a Windows binary and does not open the MSYS path /dev/null, so the
+ # probe used to fail closed and the CI build stayed English-only.  The shell
+ # redirects stdin; g++ only has to compile an empty translation unit.
+ NLS ?= $(if $(shell $(CXX) $(CPPFLAGS) -include libintl.h -fsyntax-only -x c++ - </dev/null >/dev/null 2>&1 && echo 1),1,0)
 else
  NLS ?= 1
 endif
