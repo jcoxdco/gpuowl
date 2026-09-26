@@ -230,7 +230,6 @@ jobs:
       fail-fast: false
     env:
       CXX: ${{ matrix.cxx }}
-      NLS: 1
       PACKAGE_PREFIX: mingw-w64-${{ endsWith(matrix.os, '-arm') && 'clang-aarch64' || 'x86_64' }}-
     steps:
     - uses: actions/checkout@v7
@@ -242,7 +241,7 @@ jobs:
         echo "LIBPATH=-LC:\msys64\mingw64\lib" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     - name: Install
       run: |
-        pacman -S --noconfirm "${env:PACKAGE_PREFIX}opencl-icd" "${env:PACKAGE_PREFIX}gettext"
+        pacman -S --noconfirm "${env:PACKAGE_PREFIX}opencl-icd"
         & $env:CXX --version
     - name: Install Clang
       if: ${{ matrix.cxx == 'clang++' }}
@@ -251,8 +250,7 @@ jobs:
         & $env:CXX --version
     - name: Script
       run: |
-        make DEBUG=1 -j $env:NUMBER_OF_PROCESSORS
-        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        make DEBUG=1 -O -j $env:NUMBER_OF_PROCESSORS
         cd build-debug
         rm *.o
         .\prpll.exe -h
