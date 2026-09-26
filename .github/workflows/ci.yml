@@ -230,6 +230,7 @@ jobs:
       fail-fast: false
     env:
       CXX: ${{ matrix.cxx }}
+      NLS: 1
       PACKAGE_PREFIX: mingw-w64-${{ endsWith(matrix.os, '-arm') && 'clang-aarch64' || 'x86_64' }}-
     steps:
     - uses: actions/checkout@v7
@@ -250,7 +251,7 @@ jobs:
         & $env:CXX --version
     - name: Script
       run: |
-        make DEBUG=1 -O -j $env:NUMBER_OF_PROCESSORS
+        make DEBUG=1 -j $env:NUMBER_OF_PROCESSORS
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
         cd build-debug
         rm *.o

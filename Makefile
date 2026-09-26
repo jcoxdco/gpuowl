@@ -17,8 +17,10 @@ STATIC_CUDA = 0
 
 HOST_OS = $(shell uname -s)
 # MSYS2's make reports MSYS_NT when the Windows CI runs it from PowerShell. The compiler is still
-# MinGW, so that host has to take the same Windows path as a MINGW_NT uname.
-HOST_WIN = $(findstring MINGW,$(HOST_OS))$(findstring MSYS,$(HOST_OS))
+# MinGW, so WINVER and NLS have to follow the Windows path. The PE subsystem flags stay MINGW-only:
+# they were never on the MSYS CI link line, and g++/ld.bfd rejects the forms clang/lld accepts.
+HOST_MINGW = $(findstring MINGW,$(HOST_OS))
+HOST_WIN = $(HOST_MINGW)$(findstring MSYS,$(HOST_OS))
 
 CXX ?= g++
 
@@ -56,9 +58,9 @@ endif
 
 ifneq ($(HOST_WIN),)
  CPPFLAGS += -DWINVER=0x0601 -D_WIN32_WINNT=0x0601
- # Windows 7 subsystem version.  console:6.01 is one ld argument, but ':' is special
- # to the g++ driver, so only the clang/lld CI link accepted it.  Split it.
- LDFLAGS += -Wl,--subsystem,console -Wl,--major-subsystem-version,6 -Wl,--minor-subsystem-version,1
+endif
+ifneq ($(HOST_MINGW),)
+ LDFLAGS += -Wl,--subsystem=console:6.01
 endif
 
 # NLS=1 translates the help and the status messages through GNU gettext (catalogs in po/, see "make locale");
@@ -68,10 +70,10 @@ endif
 ifeq ($(HOST_OS), Darwin)
  NLS ?= 0
 else ifneq ($(HOST_WIN),)
- # MinGW g++ is a Windows binary and does not open the MSYS path /dev/null, so the
- # probe used to fail closed and the CI build stayed English-only.  The shell
- # redirects stdin; g++ only has to compile an empty translation unit.
- NLS ?= $(if $(shell $(CXX) $(CPPFLAGS) -include libintl.h -fsyntax-only -x c++ - </dev/null >/dev/null 2>&1 && echo 1),1,0)
+ # A compile probe is unreliable here: MinGW g++ is a Windows binary (no /dev/null), and
+ # make $(shell) from PowerShell may not be a POSIX shell. Look for the header instead.
+ INTL_INCDIRS = $(patsubst -I%,%,$(filter -I%,$(CPPFLAGS))) /mingw64/include C:/msys64/mingw64/include
+ NLS ?= $(if $(wildcard $(addsuffix /libintl.h,$(INTL_INCDIRS))),1,0)
 else
  NLS ?= 1
 endif

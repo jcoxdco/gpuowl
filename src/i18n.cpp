@@ -4,22 +4,6 @@
 
 #include <cstring>
 
-namespace {
-
-// The "-lang" value from the command line: nullptr when absent, "" when given without a value.
-// Args splits the command line into "-key value" pairs the same way.
-const char *commandLineLang(int argc, char **argv) {
-  const char *lang = nullptr;
-  for (int i = 1; i < argc; ++i) {
-    if (argv[i] && !strcmp(argv[i], "-lang")) {
-      lang = (i + 1 < argc && argv[i + 1] && argv[i + 1][0] != '-') ? argv[i + 1] : "";
-    }
-  }
-  return lang;
-}
-
-} // namespace
-
 #if !PRPLL_NLS
 
 void initI18n(int, char **) noexcept {}
@@ -387,6 +371,18 @@ bool initLinked(const char *lang) {
 #endif
 
 } // namespace
+
+// The "-lang" value from the command line: nullptr when absent, "" when given without a value.
+// Args splits the command line into "-key value" pairs the same way.
+static const char *commandLineLang(int argc, char **argv) {
+  const char *lang = nullptr;
+  for (int i = 1; i < argc; ++i) {
+    if (argv[i] && !strcmp(argv[i], "-lang")) {
+      lang = (i + 1 < argc && argv[i + 1] && argv[i + 1][0] != '-') ? argv[i + 1] : "";
+    }
+  }
+  return lang;
+}
 
 void initI18n(int argc, char **argv) noexcept {
   try {
