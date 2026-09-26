@@ -16,6 +16,9 @@ STATIC_CUDA = 0
 # make all DEBUG=1 CXX=g++-12
 
 HOST_OS = $(shell uname -s)
+# MSYS2's make reports MSYS_NT when the Windows CI runs it from PowerShell. The compiler is still
+# MinGW, so that host has to take the same Windows path as a MINGW_NT uname.
+HOST_WIN = $(findstring MINGW,$(HOST_OS))$(findstring MSYS,$(HOST_OS))
 
 CXX ?= g++
 
@@ -45,13 +48,13 @@ COMMON_FLAGS = -Wall -Wextra $(CUDAFLAGS) -std=c++20
 ifeq ($(STATIC_RUNTIME),1)
  LDFLAGS += -static-libstdc++ -static-libgcc
 
- ifeq ($(findstring MINGW, $(HOST_OS)), MINGW)
+ ifneq ($(HOST_WIN),)
 # For mingw-64 use this:
   LDFLAGS += -static
  endif
 endif
 
-ifeq ($(findstring MINGW, $(HOST_OS)), MINGW)
+ifneq ($(HOST_WIN),)
  CPPFLAGS += -DWINVER=0x0601 -D_WIN32_WINNT=0x0601
  LDFLAGS += -Wl,--subsystem,console:6.01
 endif
@@ -62,7 +65,7 @@ endif
 # LOCALEDIR is where the catalogs are looked for when there is no "locale" directory next to the executable.
 ifeq ($(HOST_OS), Darwin)
  NLS ?= 0
-else ifeq ($(findstring MINGW, $(HOST_OS)), MINGW)
+else ifneq ($(HOST_WIN),)
  NLS ?= $(if $(shell $(CXX) $(CPPFLAGS) -include libintl.h -fsyntax-only -x c++ /dev/null 2>/dev/null && echo 1),1,0)
 else
  NLS ?= 1
@@ -71,7 +74,7 @@ LOCALEDIR ?= /usr/share/locale
 
 ifeq ($(NLS), 1)
  CPPFLAGS += -DPRPLL_NLS=1 -DPRPLL_LOCALEDIR='"$(LOCALEDIR)"'
- ifeq ($(findstring MINGW, $(HOST_OS)), MINGW)
+ ifneq ($(HOST_WIN),)
   NLS_LIBS = -lintl -liconv
  endif
 endif
