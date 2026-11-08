@@ -413,13 +413,16 @@ void Tune::tune() {
 
   // A GPU slows down for minutes as it heats up (clock boost, then the fan and the power limit catch up), and every option is timed
   // once, one after the other:  timed cold, the first options look faster than the later ones.  So run the GPU until it is hot.
-  if (warmup_secs > 0) {
+  // It runs at least once even with warmup=0:  that run is what shows the GPU can run kernels at all (see checkGpuCanRun).
+  {
     bool const useSpec = !shapes.empty() && (hasFP64(shared.context->deviceId()) || !FFTConfig{shapes[0], 202, CARRY_AUTO}.FFT_FP64);
     FFTConfig const fft{useSpec ? shapes[0] : FFTShape(FFT3161, 512, 7, 512), 202, CARRY_AUTO};
     u64 const exponent = primes.prevPrime(fft.maxExp());
-    log("Warming up the GPU for %u seconds before timing (-tune warmup=<secs> to change, warmup=0 to skip)\n", warmup_secs);
+    if (warmup_secs > 0) {
+      log("Warming up the GPU for %u seconds before timing (-tune warmup=<secs> to change, warmup=0 to skip)\n", warmup_secs);
+    }
     Timer timer;
-    while (timer.at() < warmup_secs) { timeConfig(exponent, shared, fft, {}, quick); }
+    do { timeConfig(exponent, shared, fft, {}, quick); } while (timer.at() < warmup_secs);
   }
 
   // Only retune the settings of the existing tune.txt entries -- those of the -fft shapes, if given, and those used for the
